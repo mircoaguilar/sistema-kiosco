@@ -61,7 +61,7 @@ CREATE TABLE `detalle_ventas` (
   KEY `id_producto` (`id_producto`),
   CONSTRAINT `detalle_ventas_ibfk_1` FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE,
   CONSTRAINT `detalle_ventas_ibfk_2` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `detalle_ventas` (
 
 LOCK TABLES `detalle_ventas` WRITE;
 /*!40000 ALTER TABLE `detalle_ventas` DISABLE KEYS */;
-INSERT INTO `detalle_ventas` VALUES (1,1,1,1.000,3000.00,3000.00),(2,1,2,1.000,2500.00,2500.00),(3,2,1,1.000,3000.00,3000.00),(4,2,2,1.000,2500.00,2500.00);
+INSERT INTO `detalle_ventas` VALUES (5,3,1,1.000,3000.00,3000.00),(6,3,4,1.000,600.00,600.00);
 /*!40000 ALTER TABLE `detalle_ventas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -104,7 +104,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'123456','Coca-Cola',1,2000.00,3000.00,48.000,10.000,1),(2,'1234567','Fanta',1,1700.00,2500.00,48.000,10.000,1),(4,'779123456','Alfajor Guaymallen de Oro',2,350.00,600.00,24.000,5.000,0);
+INSERT INTO `productos` VALUES (1,'123456','Coca-Cola',1,2000.00,3000.00,47.000,10.000,1),(2,'1234567','Fanta',1,1700.00,2500.00,48.000,10.000,1),(4,'779123456','Alfajor Guaymallen de Oro',2,350.00,600.00,23.000,5.000,0);
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -183,14 +183,16 @@ CREATE TABLE `ventas` (
   `id_usuario` int DEFAULT NULL,
   `id_sesion` int DEFAULT NULL,
   `total_venta` decimal(12,2) NOT NULL,
-  `metodo_pago` enum('efectivo','transferencia') DEFAULT 'efectivo',
+  `monto_efectivo` decimal(12,2) DEFAULT '0.00',
+  `monto_transferencia` decimal(12,2) DEFAULT '0.00',
+  `metodo_pago` enum('efectivo','transferencia','mixto') DEFAULT 'efectivo',
   `monto_pagado` decimal(12,2) DEFAULT NULL,
   PRIMARY KEY (`id_venta`),
   KEY `id_usuario` (`id_usuario`),
   KEY `fk_ventas_sesion` (`id_sesion`),
   CONSTRAINT `fk_ventas_sesion` FOREIGN KEY (`id_sesion`) REFERENCES `sesiones_caja` (`id_sesion`),
   CONSTRAINT `ventas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -199,7 +201,7 @@ CREATE TABLE `ventas` (
 
 LOCK TABLES `ventas` WRITE;
 /*!40000 ALTER TABLE `ventas` DISABLE KEYS */;
-INSERT INTO `ventas` VALUES (1,'2026-04-06 17:13:55',1,NULL,5500.00,'efectivo',NULL),(2,'2026-04-06 17:25:57',1,NULL,5500.00,'efectivo',NULL);
+INSERT INTO `ventas` VALUES (3,'2026-04-07 21:33:09',1,NULL,3600.00,3000.00,600.00,'mixto',3000.00);
 /*!40000 ALTER TABLE `ventas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -212,4 +214,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-07 17:58:02
+-- Dump completed on 2026-04-07 18:43:27

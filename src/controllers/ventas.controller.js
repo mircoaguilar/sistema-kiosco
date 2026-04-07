@@ -2,16 +2,35 @@ const db = require('../config/db');
 
 const ventasController = {
     crearVenta: async (req, res) => {
-        const { id_usuario, metodo_pago, total_venta, items } = req.body;
+        const { 
+            id_usuario, 
+            id_sesion, 
+            metodo_pago, 
+            total_venta, 
+            monto_efectivo, 
+            monto_transferencia, 
+            items 
+        } = req.body;
 
         const connection = await db.getConnection();
         await connection.beginTransaction();
 
         try {
             const [ventaResult] = await connection.query(
-                'INSERT INTO ventas (id_usuario, total_venta, metodo_pago) VALUES (?, ?, ?)',
-                [id_usuario, total_venta, metodo_pago]
+                `INSERT INTO ventas 
+                (id_usuario, id_sesion, total_venta, monto_efectivo, monto_transferencia, metodo_pago, monto_pagado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    id_usuario, 
+                    id_sesion || null, 
+                    total_venta, 
+                    monto_efectivo || 0, 
+                    monto_transferencia || 0, 
+                    metodo_pago,
+                    monto_efectivo || total_venta 
+                ]
             );
+            
             const id_venta = ventaResult.insertId;
 
             for (const item of items) {
