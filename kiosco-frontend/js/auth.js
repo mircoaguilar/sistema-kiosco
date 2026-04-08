@@ -2,7 +2,6 @@ const formLogin = document.getElementById('form-login');
 const alertContainer = document.getElementById('alert-container');
 const btnEntrar = document.getElementById('btn-entrar');
 
-// Función para mostrar alertas de Bootstrap
 function mostrarAlerta(mensaje, tipo) {
     alertContainer.innerHTML = `
         <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
@@ -11,7 +10,6 @@ function mostrarAlerta(mensaje, tipo) {
         </div>
     `;
     
-    // Auto-eliminar la alerta después de 4 segundos
     setTimeout(() => {
         alertContainer.innerHTML = '';
     }, 4000);
@@ -23,13 +21,11 @@ formLogin.addEventListener('submit', async (e) => {
     const usuario = document.getElementById('usuario').value.trim();
     const password = document.getElementById('password').value.trim();
 
-    // Validación manual
     if (!usuario || !password) {
         mostrarAlerta('Por favor, completa todos los campos.', 'warning');
         return;
     }
 
-    // Bloquear botón mientras carga
     btnEntrar.disabled = true;
     btnEntrar.innerText = 'Cargando...';
 
@@ -46,6 +42,8 @@ formLogin.addEventListener('submit', async (e) => {
             localStorage.setItem('jwt_token', data.token); 
             localStorage.setItem('id_usuario', data.user.id);
             
+            localStorage.setItem('nombre_usuario', data.user.nombre);
+
             mostrarAlerta('¡Éxito! Redirigiendo...', 'success');
             
             setTimeout(() => {

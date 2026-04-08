@@ -1,16 +1,20 @@
 const API_URL = 'http://localhost:3000/api';
 let carrito = [];
-const token = localStorage.getItem('jwt_token');
-const idUsuario = localStorage.getItem('id_usuario'); // Asegurate de guardarlo en el login
 
-// Referencias al DOM
+const token = localStorage.getItem('jwt_token');
+const idUsuario = localStorage.getItem('id_usuario'); 
+const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Cajero'; 
+
 const inputCodigo = document.getElementById('input-codigo');
 const tablaCarrito = document.getElementById('tabla-carrito');
 const totalVentaHTML = document.getElementById('total-venta');
 const btnEfectivo = document.getElementById('btn-pago-efectivo');
 const btnDigital = document.getElementById('btn-pago-digital');
+const btnLogout = document.getElementById('btn-logout');
+const nombreVendedorSpan = document.getElementById('nombre-vendedor');
 
-// --- 1. Lógica de Escaneo ---
+nombreVendedorSpan.innerText = `Vendedor: ${nombreUsuario}`;
+
 inputCodigo.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -30,14 +34,14 @@ async function buscarProducto(codigo) {
         const producto = await response.json();
         agregarAlCarrito(producto);
     } catch (error) {
-        alert("Producto no encontrado");
+        alert("Producto no encontrado o error de red");
     }
 }
 
-// --- 2. Manejo del Carrito ---
 function agregarAlCarrito(prod) {
-    // IMPORTANTE: El backend usa 'id_producto', mapeamos los datos aquí
     const index = carrito.findIndex(item => item.id_producto === prod.id_producto);
+
+    const precioNumerico = parseFloat(prod.precio_venta) || 0;
 
     if (index !== -1) {
         carrito[index].cantidad++;
@@ -45,7 +49,7 @@ function agregarAlCarrito(prod) {
         carrito.push({
             id_producto: prod.id_producto,
             nombre: prod.nombre,
-            precio_unitario: parseFloat(prod.precio), // El backend espera precio_unitario
+            precio_unitario: precioNumerico, 
             cantidad: 1
         });
     }
@@ -59,34 +63,58 @@ function renderizar() {
     carrito.forEach((item, index) => {
         const subtotal = item.precio_unitario * item.cantidad;
         total += subtotal;
+
         tablaCarrito.innerHTML += `
             <tr>
-                <td>${item.nombre}</td>
-                <td>$${item.precio_unitario.toFixed(2)}</td>
-                <td>${item.cantidad}</td>
-                <td class="fw-bold">$${subtotal.toFixed(2)}</td>
-                <td><button class="btn btn-sm btn-danger" onclick="eliminar(${index})">X</button></td>
+                <td class="fw-bold">${item.nombre}</td>
+                <td>$${item.precio_unitario.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-sm btn-light border" onclick="modificarCantidad(${index}, -1)">-</button>
+                        <span class="mx-3 fw-bold">${item.cantidad}</span>
+                        <button class="btn btn-sm btn-light border" onclick="modificarCantidad(${index}, 1)">+</button>
+                    </div>
+                </td>
+                <td class="fw-bold text-success">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm fw-bold" onclick="eliminar(${index})" title="Eliminar">
+                        <i class="bi bi-x-circle"></i> Quitar
+                    </button>
+                </td>
             </tr>`;
     });
-    totalVentaHTML.innerText = `$${total.toFixed(2)}`;
+
+    totalVentaHTML.innerText = `$${total.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
 }
 
-window.eliminar = (i) => { carrito.splice(i, 1); renderizar(); };
+window.modificarCantidad = (index, valor) => {
+    carrito[index].cantidad += valor;
 
-// --- 3. Lógica de Finalizar Venta (Checkout) ---
+    if (carrito[index].cantidad <= 0) {
+        eliminar(index);
+    } else {
+        renderizar();
+    }
+};
 
-// Función genérica para enviar la venta
+
+window.eliminar = (i) => { 
+    carrito.splice(i, 1); 
+    renderizar(); 
+};
+
 async function procesarVenta(metodo) {
     if (carrito.length === 0) return alert("El carrito está vacío");
 
     const totalCalculado = carrito.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);
+    const imprimirTicket = document.getElementById('check-ticket').checked;
 
-    // Armamos el objeto exacto que pide el controlador
     const datosVenta = {
         id_usuario: parseInt(idUsuario), 
         metodo_pago: metodo,
         total_venta: totalCalculado,
-        items: carrito // El array ya tiene id_producto, cantidad y precio_unitario
+        imprimir_ticket: imprimirTicket, 
+        items: carrito 
     };
 
     try {
@@ -103,11 +131,11 @@ async function procesarVenta(metodo) {
 
         if (response.ok) {
             alert(`¡Venta #${res.id_venta} exitosa!`);
-            carrito = []; // Limpiamos carrito
+            carrito = []; 
             renderizar();
-            inputCodigo.focus();
+            inputCodigo.focus(); 
         } else {
-            alert("Error: " + res.error);
+            alert("Error: " + (res.error || "No se pudo procesar"));
         }
     } catch (error) {
         console.error(error);
@@ -115,9 +143,19 @@ async function procesarVenta(metodo) {
     }
 }
 
-// Eventos de los botones de pago
 btnEfectivo.addEventListener('click', () => procesarVenta('Efectivo'));
 btnDigital.addEventListener('click', () => procesarVenta('Digital'));
 
-// Mantener el foco
-document.addEventListener('click', () => inputCodigo.focus());
+btnLogout.addEventListener('click', () => {
+    localStorage.clear();
+    window.location.href = 'login.html';
+});
+
+inputCodigo.focus();
+
+document.addEventListener('keydown', (e) => {
+    if (document.activeElement === inputCodigo) return;
+
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    inputCodigo.focus();
+});

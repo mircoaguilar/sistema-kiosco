@@ -1,3 +1,11 @@
+require('dotenv').config();
+// FORZADO MANUAL: Si dotenv falla, esto lo arregla
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'clave_maestra_formosa_2026';
+
+console.log("--- CHEQUEO DE INICIO ---");
+console.log("JWT_SECRET cargado:", process.env.JWT_SECRET);
+console.log("-------------------------");
+
 const express = require('express');
 const cors = require('cors');
 const db = require('./src/config/db'); 

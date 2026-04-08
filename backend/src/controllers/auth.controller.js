@@ -7,7 +7,6 @@ const authController = {
         const { usuario, password } = req.body;
 
         try {
-            // Buscamos el usuario
             const [rows] = await db.query('SELECT * FROM usuarios WHERE usuario = ? AND estado = 1', [usuario]);
             
             if (rows.length === 0) {
@@ -16,18 +15,14 @@ const authController = {
 
             const user = rows[0];
 
-            // COMPARACIÓN SIMPLE (Texto plano)
-            // Cambiamos bcrypt.compare por una comparación de strings directa
             if (password !== user.password) {
                 return res.status(401).json({ message: "Credenciales inválidas (contraseña incorrecta)" });
             }
 
-            // Verificamos el secreto del JWT
             if (!process.env.JWT_SECRET) {
                 throw new Error("JWT_SECRET no definida en variables de entorno");
             }
 
-            // Generamos el Token
             const token = jwt.sign(
                 { 
                     id: user.id_usuario, 
@@ -36,10 +31,9 @@ const authController = {
                     username: user.usuario 
                 },
                 process.env.JWT_SECRET,
-                { expiresIn: '8h' } 
+                { expiresIn: '18h' } 
             );
 
-            // Respuesta exitosa
             res.json({
                 message: "Login exitoso",
                 token,
