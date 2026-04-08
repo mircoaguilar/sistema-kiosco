@@ -1,3 +1,11 @@
+(function verificarSesion() {
+    const token = localStorage.getItem('jwt_token');
+    
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+})();
+
 const API_URL = 'http://localhost:3000/api';
 let carrito = [];
 

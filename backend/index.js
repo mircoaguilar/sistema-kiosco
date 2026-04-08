@@ -1,10 +1,11 @@
 require('dotenv').config();
-// FORZADO MANUAL: Si dotenv falla, esto lo arregla
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'clave_maestra_formosa_2026';
 
-console.log("--- CHEQUEO DE INICIO ---");
-console.log("JWT_SECRET cargado:", process.env.JWT_SECRET);
-console.log("-------------------------");
+if (!process.env.JWT_SECRET) {
+    console.error("ERROR CRÍTICO: No se encontró la JWT_SECRET en el entorno.");
+    process.exit(1); 
+}
+
+console.log("Servidor iniciado con seguridad activa.");
 
 const express = require('express');
 const cors = require('cors');
