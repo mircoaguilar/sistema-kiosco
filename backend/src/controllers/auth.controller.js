@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt'); // Lo comentamos por ahora
 const jwt = require('jsonwebtoken');
 
 const authController = {
@@ -7,24 +7,27 @@ const authController = {
         const { usuario, password } = req.body;
 
         try {
+            // Buscamos el usuario
             const [rows] = await db.query('SELECT * FROM usuarios WHERE usuario = ? AND estado = 1', [usuario]);
             
             if (rows.length === 0) {
-                return res.status(401).json({ message: "Credenciales inválidas" });
+                return res.status(401).json({ message: "Credenciales inválidas (usuario no existe)" });
             }
 
             const user = rows[0];
 
-            const match = await bcrypt.compare(password, user.password);
-            
-            if (!match) {
-                return res.status(401).json({ message: "Credenciales inválidas" });
+            // COMPARACIÓN SIMPLE (Texto plano)
+            // Cambiamos bcrypt.compare por una comparación de strings directa
+            if (password !== user.password) {
+                return res.status(401).json({ message: "Credenciales inválidas (contraseña incorrecta)" });
             }
 
+            // Verificamos el secreto del JWT
             if (!process.env.JWT_SECRET) {
                 throw new Error("JWT_SECRET no definida en variables de entorno");
             }
 
+            // Generamos el Token
             const token = jwt.sign(
                 { 
                     id: user.id_usuario, 
@@ -36,6 +39,7 @@ const authController = {
                 { expiresIn: '8h' } 
             );
 
+            // Respuesta exitosa
             res.json({
                 message: "Login exitoso",
                 token,
@@ -47,7 +51,7 @@ const authController = {
             });
 
         } catch (error) {
-            console.error(error); 
+            console.error("Error en el login:", error); 
             res.status(500).json({ error: "Error en el servidor" });
         }
     }

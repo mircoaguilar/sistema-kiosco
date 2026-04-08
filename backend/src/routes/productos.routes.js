@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const productosController = require('../controllers/productos.controller');
-const verificarToken = require('../middlewares/auth.middleware');
+const { verificarToken } = require('../middlewares/auth.middleware');
 
 router.get('/', productosController.obtenerTodos);
 router.get('/:codigo', productosController.obtenerPorCodigo);

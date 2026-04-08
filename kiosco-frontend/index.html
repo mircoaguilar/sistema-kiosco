@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto de Venta - Kiosco</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Sistema Kiosco</span>
+            <button class="btn btn-outline-light btn-sm" id="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="input-codigo" class="form-label fw-bold">Escanear Código de Barras</label>
+                            <input type="text" class="form-control form-control-lg" id="input-codigo" placeholder="Esperando lectura..." autofocus autocomplete="off">
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio Uni.</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-carrito">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-body text-center">
+                        <h4 class="card-title text-muted">Total a Pagar</h4>
+                        <h1 class="display-3 fw-bold text-primary mb-4" id="total-venta">$0.00</h1>
+                        
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-success btn-lg" id="btn-pago-efectivo">
+                                Cobrar en Efectivo
+                            </button>
+                            <button class="btn btn-info btn-lg text-white" id="btn-pago-digital">
+                                Cobrar Digital (QR/Transf)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/ventas.js"></script>
+</body>
+</html>
