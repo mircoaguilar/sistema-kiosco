@@ -3,14 +3,19 @@ const db = require('../config/db');
 const ventasController = {
     crearVenta: async (req, res) => {
         const { 
-            id_usuario, 
-            id_sesion, 
             metodo_pago, 
             total_venta, 
             monto_efectivo, 
             monto_transferencia, 
             items 
         } = req.body;
+
+        const id_usuario = req.user.id; 
+        const id_sesion = req.id_sesion_activa; 
+
+        if (!items || !Array.isArray(items)) {
+            return res.status(400).json({ error: "La lista de productos ('items') es inválida o no existe." });
+        }
 
         const connection = await db.getConnection();
         await connection.beginTransaction();
@@ -22,12 +27,12 @@ const ventasController = {
                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [
                     id_usuario, 
-                    id_sesion || null, 
+                    id_sesion,
                     total_venta, 
                     monto_efectivo || 0, 
                     monto_transferencia || 0, 
                     metodo_pago,
-                    monto_efectivo || total_venta 
+                    total_venta 
                 ]
             );
             
@@ -50,6 +55,7 @@ const ventasController = {
 
         } catch (error) {
             await connection.rollback();
+            console.error("Error en DB:", error);
             res.status(500).json({ error: "Error al procesar la venta", details: error.message });
         } finally {
             connection.release();

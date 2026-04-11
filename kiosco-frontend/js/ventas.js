@@ -121,6 +121,8 @@ async function procesarVenta(metodo) {
         id_usuario: parseInt(idUsuario), 
         metodo_pago: metodo,
         total_venta: totalCalculado,
+        monto_efectivo: metodo === 'efectivo' ? totalCalculado : 0,
+        monto_transferencia: metodo === 'transferencia' ? totalCalculado : 0,
         imprimir_ticket: imprimirTicket, 
         items: carrito 
     };
@@ -151,8 +153,8 @@ async function procesarVenta(metodo) {
     }
 }
 
-btnEfectivo.addEventListener('click', () => procesarVenta('Efectivo'));
-btnDigital.addEventListener('click', () => procesarVenta('Digital'));
+btnEfectivo.addEventListener('click', () => procesarVenta('efectivo'));
+btnDigital.addEventListener('click', () => procesarVenta('transferencia'));
 
 btnLogout.addEventListener('click', () => {
     localStorage.clear();

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Caja</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .offcanvas { width: 300px !important; }
+        .nav-link { color: #333; font-weight: 500; padding: 15px 20px; border-bottom: 1px solid #f0f0f0; }
+        .nav-link:hover { background-color: #f8f9fa; }
+        .card { border-radius: 10px; border: none; }
+        .border-start-4 { border-left-width: 4px !important; }
+        .table thead { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Eli Mini Market</span>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3 d-none d-md-inline" id="nombre-vendedor">Vendedor: ---</span>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title">Panel de Control</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="index.html">Punto de Venta</a>
+
+                <div>
+                    <a class="nav-link active bg-light" href="caja.html">
+                        Gestión de Caja
+                    </a>
+                </div>
+
+                <div>
+                    <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuStock">
+                        Inventario
+                        <small>▼</small>
+                    </a>
+                    <div class="collapse bg-light" id="menuStock">
+                        <a class="nav-link ps-4 py-2 small" href="productos.html">Lista de Productos</a>
+                        <a class="nav-link ps-4 py-2 small" href="proveedores.html">Proveedores</a>
+                        <a class="nav-link ps-4 py-2 small" href="precios.html">Actualizar Precios</a>
+                    </div>
+                </div>
+
+                <div>
+                    <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuReportes">
+                        Reportes
+                        <small>▼</small>
+                    </a>
+                    <div class="collapse bg-light" id="menuReportes">
+                        <a class="nav-link ps-4 py-2 small" href="ventas-dia.html">Ventas del Dia</a>
+                        <a class="nav-link ps-4 py-2 small" href="estadisticas.html">Estadisticas Mensuales</a>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="mt-auto p-3 border-top">
+                <button class="btn btn-danger w-100" id="btn-logout">Cerrar Sesion</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold m-0 text-dark">Gestión de Caja</h2>
+            <span class="badge bg-success px-3 py-2" id="badge-estado-caja">CARGANDO...</span>
+        </div>
+
+        <div class="row g-3 mb-4 text-dark">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-start border-primary border-start-4 h-100">
+                    <div class="card-body">
+                        <small class="text-muted fw-bold d-block mb-1">MONTO INICIAL</small>
+                        <h4 class="fw-bold m-0" id="monto-inicial">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-start border-success border-start-4 h-100">
+                    <div class="card-body">
+                        <small class="text-muted fw-bold d-block mb-1">VENTAS EFECTIVO</small>
+                        <h4 class="fw-bold m-0" id="monto-ventas">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-start border-danger border-start-4 h-100">
+                    <div class="card-body">
+                        <small class="text-muted fw-bold d-block mb-1">GASTOS</small>
+                        <h4 class="fw-bold m-0 text-danger" id="monto-gastos">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm bg-dark text-white text-center h-100">
+                    <div class="card-body">
+                        <small class="text-white-50 fw-bold d-block mb-1">EFECTIVO ESPERADO</small>
+                        <h3 class="fw-bold text-warning m-0" id="monto-esperado">$0.00</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="fw-bold m-0 text-dark">MOVIMIENTOS DE LA SESIÓN</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="ps-3">Hora</th>
+                                        <th>Descripción</th>
+                                        <th>Tipo</th>
+                                        <th class="text-end pe-3">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-movimientos">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm bg-white p-3 border-0 text-center">
+                    <h6 class="fw-bold mb-3 text-dark">ARQUEO DE CAJA</h6>
+                    <p class="text-muted small">Al cerrar se comparará el efectivo real con el sistema.</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-danger py-3 fw-bold" id="btn-cerrar-caja">
+                            REALIZAR CIERRE DE CAJA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="modal fade" id="modalAbrirCaja" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">Apertura de Caja</h5>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="formAbrirCaja">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">MONTO INICIAL EN EFECTIVO</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <input type="number" step="0.01" class="form-control fw-bold" id="monto_inicial_input" placeholder="0.00" required>
+                            </div>
+                            <small class="text-muted">Ingresá el dinero con el que iniciás el día (cambio).</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">ABRIR CAJA AHORA</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCerrarCaja" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">Cierre de caja</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 small">
+                        Contá el efectivo total en el cajón y cargalo abajo.
+                    </div>
+                    <form id="formCerrarCaja">
+                        <div class="mb-3 text-center">
+                            <label class="form-label text-muted small">EFECTIVO EN CAJÓN</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg text-center fw-bold" id="monto_real_input" required>
+                        </div>
+                        <div id="display-diferencia" class="text-center mb-3 fw-bold" style="display:none;">
+                            </div>
+                        <button type="submit" class="btn btn-danger w-100 py-2 fw-bold">CONFIRMAR CIERRE</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/caja.js"></script>
+</body>
+</html>

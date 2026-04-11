@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punto de Venta - Eli Mini Market</title>
+    <title>Punto de Venta</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .offcanvas { width: 300px !important; }
+        .nav-link { color: #333; font-weight: 500; padding: 15px 20px; border-bottom: 1px solid #f0f0f0; }
+        .nav-link:hover { background-color: #f8f9fa; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -12,11 +17,58 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Eli Mini Market</span>
             <div class="d-flex align-items-center">
-                <span class="text-white me-4 fw-bold" id="nombre-vendedor">Vendedor: ---</span>
-                <button class="btn btn-outline-light btn-sm" id="btn-logout">Cerrar Sesión</button>
+                <span class="text-white me-3 d-none d-md-inline" id="nombre-vendedor">Vendedor: ---</span>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
             </div>
         </div>
     </nav>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
+    <div class="offcanvas-header bg-dark text-white">
+        <h5 class="offcanvas-title">Panel de Control</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <nav class="nav flex-column">
+            <a class="nav-link active bg-light" href="index.html">Punto de Venta</a>
+
+            <div>
+                <a class="nav-link d-flex justify-content-between align-items-center" href="caja.html">
+                    Gestión de Caja
+                </a>
+            </div>
+
+            <div>
+                <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuStock">
+                    Inventario
+                    <small>▼</small>
+                </a>
+                <div class="collapse bg-light" id="menuStock">
+                    <a class="nav-link ps-4 py-2 small" href="productos.html">Lista de Productos</a>
+                    <a class="nav-link ps-4 py-2 small" href="proveedores.html">Proveedores</a>
+                    <a class="nav-link ps-4 py-2 small" href="precios.html">Actualizar Precios</a>
+                </div>
+            </div>
+
+            <div>
+                <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuReportes">
+                    Reportes
+                    <small>▼</small>
+                </a>
+                <div class="collapse bg-light" id="menuReportes">
+                    <a class="nav-link ps-4 py-2 small" href="ventas-dia.html">Ventas del Dia</a>
+                    <a class="nav-link ps-4 py-2 small" href="estadisticas.html">Estadisticas Mensuales</a>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="mt-auto p-3 border-top">
+            <button class="btn btn-danger w-100" id="btn-logout">Cerrar Sesion</button>
+        </div>
+    </div>
+</div>
 
     <div class="container-fluid px-4">
         <div class="row">
@@ -24,9 +76,8 @@
             <div class="col-md-8">
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
-                        
                         <div class="mb-3">
-                            <label for="input-codigo" class="form-label fw-bold">Escanear Código de Barras</label>
+                            <label for="input-codigo" class="form-label fw-bold">Escanear Codigo de Barras</label>
                             <input type="text" class="form-control form-control-lg" id="input-codigo" placeholder="Esperando lectura..." autocomplete="off">
                         </div>
 
@@ -38,11 +89,11 @@
                                         <th>Precio Uni.</th>
                                         <th>Cantidad</th>
                                         <th>Subtotal</th>
-                                        <th>Acción</th>
+                                        <th>Accion</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabla-carrito">
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -63,17 +114,34 @@
                         </div>
                         
                         <div class="d-grid gap-3">
-                            <button class="btn btn-success btn-lg" id="btn-pago-efectivo">
+                            <button class="btn btn-success btn-lg fw-bold" id="btn-pago-efectivo">
                                 Cobrar en Efectivo
                             </button>
-                            <button class="btn btn-info btn-lg text-white" id="btn-pago-digital">
-                                Mercado Pago / QR
+                            <button class="btn btn-info btn-lg text-white fw-bold" id="btn-pago-digital">
+                                Transferencia / QR
+                            </button>
+                            
+                            <hr class="mt-2 mb-0">
+
+                            <div class="text-center">
+                                <small class="text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; line-height: 1;">
+                                    ACCIONES RÁPIDAS
+                                </small>
+                            </div>
+
+                            <button class="btn btn-warning fw-bold mt-0" id="btn-registrar-gasto">
+                                Registrar Gasto
+                            </button>
+
+                            <button class="btn btn-outline-secondary py-2 small fw-bold mt-2" 
+                                    id="btn-reimprimir-ultimo" 
+                                    style="border-style: dashed; background-color: transparent !important; color: #6c757d !important; transition: none;">
+                                Reimprimir Ultimo Ticket
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 
