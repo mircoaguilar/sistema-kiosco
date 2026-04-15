@@ -9,20 +9,39 @@ const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Cajero';
 
 let carrito = [];
 let todosLosProductos = [];
+window.montoDigitalTemporal = 0;
 
-// Elementos del DOM
 const inputCodigo = document.getElementById('input-codigo');
 const tablaCarrito = document.getElementById('tabla-carrito');
 const totalVentaHTML = document.getElementById('total-venta');
 const inputPagaCon = document.getElementById('input-paga-con');
 const vueltoTexto = document.getElementById('vuelto-texto');
-const inputPagoDigitalMonto = document.getElementById('input-pago-digital-monto');
 const listaBusquedaManual = document.getElementById('lista-busqueda-manual');
 const inputBusquedaManual = document.getElementById('input-busqueda-manual');
 
+const modalMixto = new bootstrap.Modal(document.getElementById('modalMixto'));
+const mixtoTotal = document.getElementById('mixto-total');
+const mixtoEfectivo = document.getElementById('mixto-efectivo');
+const mixtoTransferencia = document.getElementById('mixto-transferencia');
+
+function mostrarToast(mensaje, tipo = "success") {
+    const toastEl = document.getElementById('toast');
+    const toastBody = document.getElementById('toast-body');
+
+    toastBody.innerText = mensaje;
+
+    toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+
+    if (tipo === "success") toastEl.classList.add('bg-success');
+    if (tipo === "error") toastEl.classList.add('bg-danger');
+    if (tipo === "warning") toastEl.classList.add('bg-warning');
+
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+}
+
 document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
 
-// --- ESCANER ---
 inputCodigo.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter') {
         const codigo = inputCodigo.value.trim();
@@ -38,10 +57,9 @@ async function buscarProducto(codigo) {
         });
         if (!res.ok) throw new Error();
         agregarAlCarrito(await res.json());
-    } catch { alert("Producto no encontrado"); }
+    } catch { mostrarToast("Producto no encontrado", "error"); }
 }
 
-// --- BUSCADOR MANUAL ---
 document.getElementById('modalBusqueda').addEventListener('shown.bs.modal', async () => {
     inputBusquedaManual.focus();
     if (todosLosProductos.length === 0) {
@@ -62,7 +80,6 @@ function renderizarBusqueda(prods) {
         <tr>
             <td>${p.nombre}</td>
             <td>$${parseFloat(p.precio_venta).toFixed(2)}</td>
-            <td>${p.stock}</td>
             <td><button class="btn btn-sm btn-success" onclick='seleccionarManual(${JSON.stringify(p)})'>+</button></td>
         </tr>`).join('');
 }
@@ -73,11 +90,22 @@ window.seleccionarManual = (p) => {
     inputCodigo.focus();
 };
 
-// --- CARRITO ---
 function agregarAlCarrito(p) {
+
+    if (p.stock <= 0) {
+        mostrarToast("Producto sin stock registrado", "warning");
+    }
+
     const i = carrito.findIndex(item => item.id_producto === p.id_producto);
+
     if (i !== -1) carrito[i].cantidad++;
-    else carrito.push({ id_producto: p.id_producto, nombre: p.nombre, precio_unitario: parseFloat(p.precio_venta), cantidad: 1 });
+    else carrito.push({
+        id_producto: p.id_producto,
+        nombre: p.nombre,
+        precio_unitario: parseFloat(p.precio_venta),
+        cantidad: 1
+    });
+
     renderizar();
 }
 
@@ -104,10 +132,17 @@ function renderizar() {
     calcularVuelto();
 }
 
-window.modificar = (i, v) => { carrito[i].cantidad += v; if (carrito[i].cantidad <= 0) eliminar(i); else renderizar(); };
-window.eliminar = (i) => { carrito.splice(i, 1); renderizar(); };
+window.modificar = (i, v) => { 
+    carrito[i].cantidad += v; 
+    if (carrito[i].cantidad <= 0) eliminar(i); 
+    else renderizar(); 
+};
 
-// --- VUELTO Y COBRO ---
+window.eliminar = (i) => { 
+    carrito.splice(i, 1); 
+    renderizar(); 
+};
+
 inputPagaCon.addEventListener('input', calcularVuelto);
 
 function calcularVuelto() {
@@ -119,50 +154,172 @@ function calcularVuelto() {
 }
 
 async function procesarVenta(metodo) {
-    if (carrito.length === 0) return alert("Carrito vacío");
+    if (carrito.length === 0) return mostrarToast("Carrito vacío", "warning");
     
-    const total = carrito.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);
-    
-    // Validación de pago mixto
-    if (metodo === 'Mixto') {
-        const efectivo = parseFloat(inputPagaCon.value) || 0;
-        const digital = parseFloat(inputPagoDigitalMonto.value) || 0;
-        if ((efectivo + digital) < total) return alert("El monto total no cubre la venta");
+    const totalVenta = carrito.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);
+    const imprimirTicket = document.getElementById('check-ticket').checked;
+
+    const pagaEfectivo = parseFloat(inputPagaCon.value) || 0;
+    const pagaDigital = window.montoDigitalTemporal || 0;
+
+    if (metodo === 'efectivo') {
+        if (pagaEfectivo < totalVenta) {
+            return mostrarToast("El efectivo recibido es menor al total", "warning");
+        }
     }
+
+    if (metodo === 'mixto') {
+        if ((pagaEfectivo + pagaDigital) < totalVenta) {
+            return alert("El monto total (Efectivo + Transferencia) no cubre la venta");
+        }
+    }
+
+    const montoEfectivo = (metodo === 'efectivo')
+        ? totalVenta
+        : (metodo === 'mixto' ? pagaEfectivo : 0);
+
+    const montoDigital = (metodo === 'transferencia')
+        ? totalVenta
+        : (metodo === 'mixto' ? pagaDigital : 0);
+
+    const montoPagado = (metodo === 'efectivo')
+        ? pagaEfectivo
+        : (metodo === 'transferencia')
+            ? totalVenta
+            : (pagaEfectivo + pagaDigital);
 
     const venta = {
         id_usuario: parseInt(idUsuario),
-        metodo_pago: metodo,
-        total_venta: totalCalculado,
-        monto_efectivo: metodo === 'efectivo' ? totalCalculado : 0,
-        monto_transferencia: metodo === 'transferencia' ? totalCalculado : 0,
-        imprimir_ticket: imprimirTicket, 
-        items: carrito 
+        metodo_pago: metodo, 
+        total_venta: totalVenta,
+        monto_efectivo: montoEfectivo,
+        monto_transferencia: montoDigital,
+        monto_pagado: montoPagado,
+        imprimir_ticket: imprimirTicket,
+        items: carrito
     };
 
     try {
         const res = await fetch(`${API_URL}/ventas`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify(venta)
         });
-        if (res.ok) {
-            alert("Venta exitosa");
-            carrito = [];
-            inputPagaCon.value = '';
-            inputPagoDigitalMonto.value = '';
-            renderizar();
-        }
-    } catch { alert("Error al procesar"); }
+
+        if (!res.ok) throw new Error();
+
+        mostrarToast("Venta exitosa", "success");
+
+        carrito = [];
+        inputPagaCon.value = '';
+        window.montoDigitalTemporal = 0;
+
+        renderizar();
+
+    } catch { 
+        mostrarToast("Error al procesar la venta", "error"); 
+    }
 }
 
-btnEfectivo.addEventListener('click', () => procesarVenta('efectivo'));
-btnDigital.addEventListener('click', () => procesarVenta('transferencia'));
+const modalMovimiento = new bootstrap.Modal(document.getElementById('modalMovimiento'));
 
-document.getElementById('btn-logout').onclick = () => { localStorage.clear(); window.location.href = 'login.html'; };
+document.getElementById('btn-registrar-gasto').onclick = () => {
 
-// Foco constante al escaner
+    document.getElementById('movimiento-concepto').value = '';
+    document.getElementById('movimiento-monto').value = '';
+    document.getElementById('movimiento-tipo').value = 'egreso';
+    document.getElementById('movimiento-metodo').value = 'efectivo';
+
+    modalMovimiento.show();
+};
+
+document.getElementById('btn-guardar-movimiento').onclick = async () => {
+
+    const tipo = document.getElementById('movimiento-tipo').value;
+    const concepto = document.getElementById('movimiento-concepto').value;
+    const monto = parseFloat(document.getElementById('movimiento-monto').value);
+    const metodo = document.getElementById('movimiento-metodo').value;
+
+    if (!monto || monto <= 0) {
+        return mostrarToast("Monto inválido", "warning");
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/movimientos`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                tipo,
+                concepto,
+                monto,
+                metodo_pago: metodo
+            })
+        });
+
+        if (!res.ok) throw new Error();
+
+        mostrarToast("Movimiento registrado", "success");
+        modalMovimiento.hide();
+
+    } catch {
+        mostrarToast("Error al registrar movimiento", "error");
+    }
+};
+
+document.getElementById('btn-pago-efectivo').onclick = () => procesarVenta('efectivo');
+document.getElementById('btn-pago-digital').onclick = () => procesarVenta('transferencia');
+
+document.getElementById('btn-pago-mixto').onclick = () => {
+    if (carrito.length === 0) return mostrarToast("Carrito vacío", "warning");
+
+    const total = carrito.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);
+
+    mixtoTotal.innerText = `$${total.toFixed(2)}`;
+    mixtoEfectivo.value = '';
+    mixtoTransferencia.innerText = `$${total.toFixed(2)}`;
+
+    modalMixto.show();
+};
+
+mixtoEfectivo.addEventListener('input', () => {
+    const total = parseFloat(mixtoTotal.innerText.replace('$', '')) || 0;
+    const efectivo = parseFloat(mixtoEfectivo.value) || 0;
+
+    const restante = total - efectivo;
+
+    mixtoTransferencia.innerText = `$${(restante > 0 ? restante : 0).toFixed(2)}`;
+});
+
+document.getElementById('btn-confirmar-mixto').onclick = () => {
+    const total = parseFloat(mixtoTotal.innerText.replace('$', '')) || 0;
+    const efectivo = parseFloat(mixtoEfectivo.value) || 0;
+    const transferencia = total - efectivo;
+
+    if (efectivo <= 0 || efectivo >= total) {
+        return alert("El monto en efectivo debe ser mayor a 0 y menor al total");
+    }
+
+    inputPagaCon.value = efectivo;
+    window.montoDigitalTemporal = transferencia;
+
+    modalMixto.hide();
+
+    procesarVenta('mixto');
+};
+
+document.getElementById('btn-logout').onclick = () => { 
+    localStorage.clear(); 
+    window.location.href = 'login.html'; 
+};
+
 document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName !== 'INPUT') inputCodigo.focus();
 });
+
 inputCodigo.focus();

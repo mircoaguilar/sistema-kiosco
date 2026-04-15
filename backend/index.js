@@ -18,7 +18,8 @@ app.use('/api/ventas',    require('./src/routes/ventas.routes'));
 app.use('/api/caja',      require('./src/routes/caja.routes'));
 app.use('/api/reportes',  require('./src/routes/reportes.routes'));
 app.use('/api/auth',      require('./src/routes/auth.routes'));
-app.use('/api/gastos',    require('./src/routes/gastos.routes'));
+app.use('/api/movimientos', require('./src/routes/movimientos.routes'));
+app.use('/api/categorias', require('./src/routes/categorias.routes'));
 
 app.get('/test-db', async (req, res) => {
     try {

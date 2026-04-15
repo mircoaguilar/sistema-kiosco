@@ -5,20 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Punto de Venta</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .table-responsive { max-height: 450px; overflow-y: auto; }
-        .sticky-top { top: -1px; z-index: 1020; }
-        #total-venta { font-size: 3.5rem; }
-    </style>
-    <style>
-        .offcanvas { width: 300px !important; }
-        .nav-link { color: #333; font-weight: 500; padding: 15px 20px; border-bottom: 1px solid #f0f0f0; }
-        .nav-link:hover { background-color: #f8f9fa; }
-    </style>
+    <link href="css/estilos-pos.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Eli Mini Market</span>
             <div class="d-flex align-items-center">
@@ -31,67 +22,59 @@
     </nav>
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
-    <div class="offcanvas-header bg-dark text-white">
-        <h5 class="offcanvas-title">Panel de Control</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body p-0">
-        <nav class="nav flex-column">
-            <a class="nav-link active bg-light" href="index.html">Punto de Venta</a>
-
-            <div>
-                <a class="nav-link d-flex justify-content-between align-items-center" href="caja.html">
-                    Gestión de Caja
-                </a>
-            </div>
-
-            <div>
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title">Panel de Control</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column">
+            <nav class="nav flex-column">
+                <a class="nav-link active bg-light" href="index.html">Punto de Venta</a>
+                <a class="nav-link" href="caja.html">Gestión de Caja</a>
+                
                 <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuStock">
-                    Inventario
-                    <small>▼</small>
+                    Inventario <small>▼</small>
                 </a>
                 <div class="collapse bg-light" id="menuStock">
                     <a class="nav-link ps-4 py-2 small" href="productos.html">Lista de Productos</a>
                     <a class="nav-link ps-4 py-2 small" href="proveedores.html">Proveedores</a>
                     <a class="nav-link ps-4 py-2 small" href="precios.html">Actualizar Precios</a>
                 </div>
-            </div>
 
-            <div>
                 <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuReportes">
-                    Reportes
-                    <small>▼</small>
+                    Reportes <small>▼</small>
                 </a>
                 <div class="collapse bg-light" id="menuReportes">
-                    <a class="nav-link ps-4 py-2 small" href="ventas-dia.html">Ventas del Dia</a>
-                    <a class="nav-link ps-4 py-2 small" href="estadisticas.html">Estadisticas Mensuales</a>
+                    <a class="nav-link ps-4 py-2 small" href="ventas-dia.html">Ventas del Día</a>
+                    <a class="nav-link ps-4 py-2 small" href="estadisticas.html">Estadísticas Mensuales</a>
                 </div>
+            </nav>
+            <div class="mt-auto p-3 border-top">
+                <button class="btn btn-danger w-100" id="btn-logout">Cerrar Sesión</button>
             </div>
-        </nav>
-        
-        <div class="mt-auto p-3 border-top">
-            <button class="btn btn-danger w-100" id="btn-logout">Cerrar Sesion</button>
         </div>
     </div>
-</div>
 
     <div class="container-fluid px-4">
-        <div class="row">
+        <div class="row g-4">
             
-            <div class="col-md-8">
-                <div class="card shadow-sm mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label for="input-codigo" class="form-label fw-bold">Escanear Codigo de Barras</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-lg" id="input-codigo" placeholder="Esperando lectura..." autocomplete="off">
-                                <button class="btn btn-outline-secondary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#modalBusqueda">
-                                    🔍 Buscar Manual
-                                </button>
-                            </div>
+                        
+                        <div class="position-relative mb-3">
+                            <label class="form-label small fw-bold text-muted">ESCANEAR PRODUCTO</label>
+                            <input type="text" class="form-control" id="input-codigo" 
+                                   placeholder="Pase el lector..." autocomplete="off">
+                            
+                            <div class="list-group d-none" id="sugerencias-busqueda">
+                                </div>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            <button class="btn btn-fav border-primary text-primary" data-bs-toggle="modal" data-bs-target="#modalBusqueda">Buscar por nombre</button>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light sticky-top">
                                     <tr>
@@ -102,40 +85,62 @@
                                         <th>Accion</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-carrito"></tbody>
+                                <tbody id="tabla-carrito">
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card shadow-sm border-primary mb-4">
-                    <div class="card-body text-center">
-                        <h4 class="card-title text-muted">Total a Pagar</h4>
-                        <h1 class="display-3 fw-bold text-primary mb-4" id="total-venta">$0.00</h1>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 text-center">
                         
-                        <div class="bg-light p-3 rounded mb-3 border">
-                            <label class="form-label fw-bold">Paga con (Efectivo):</label>
-                            <input type="number" id="input-paga-con" class="form-control form-control-lg text-center mb-2" placeholder="0.00">
-                            <h4 class="mb-0 text-muted">Vuelto: <span id="vuelto-texto" class="text-dark fw-bold">$0.00</span></h4>
+                        <div class="card-total-azul p-4 mb-3 shadow">
+                            <span class="text-uppercase opacity-75 small fw-bold">Total a Pagar</span>
+                            <h1 class="fw-bold my-2" id="total-venta">$0.00</h1>
                         </div>
 
-                        <div class="mb-3 text-start">
-                            <label class="form-label fw-bold small">Monto Digital (Solo para Pago Mixto):</label>
-                            <input type="number" id="input-pago-digital-monto" class="form-control" placeholder="Ej: 500">
+                        <div class="bg-light p-3 rounded-4 border mb-3">
+                            <label class="form-label small fw-bold text-muted">EFECTIVO RECIBIDO</label>
+                            <input type="number" id="input-paga-con" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent" placeholder="0.00" style="font-size: 2.2rem;">
+                            <hr class="my-2">
+                            <h5 class="mb-0 text-muted">Vuelto: <span id="vuelto-texto" class="text-dark fw-bold">$0.00</span></h5>
                         </div>
+
+                        <div class="form-check form-switch d-flex justify-content-center mb-4">
+                            <input class="form-check-input me-2" type="checkbox" id="check-ticket" checked style="transform: scale(1.1);">
+                            <label class="form-check-label text-muted small fw-bold" for="check-ticket">IMPRIMIR TICKET</label>
+                        </div>
+
                         
-                        <div class="form-check form-switch d-flex justify-content-center mb-3">
-                            <input class="form-check-input me-2" type="checkbox" id="check-ticket" style="transform: scale(1.2);">
-                            <label class="form-check-label text-muted fw-bold" for="check-ticket">Imprimir ticket</label>
+
+                        <div class="d-grid gap-2 mb-4">
+                            <button class="btn btn-success btn-lg py-3 fw-bold rounded-4 shadow-sm" id="btn-pago-efectivo">
+                                COBRAR EFECTIVO
+                            </button>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button class="btn btn-info text-white w-100 py-2 fw-bold rounded-3" id="btn-pago-digital"> TRANSFERENCIA / QR</button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-warning text-white w-100 py-2 fw-bold rounded-3" id="btn-pago-mixto">MIXTO</button>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-success btn-lg" id="btn-pago-efectivo">Cobrar Efectivo</button>
-                            <button class="btn btn-info btn-lg text-white" id="btn-pago-digital">Solo Digital / QR</button>
-                            <button class="btn btn-warning btn-lg text-white fw-bold" id="btn-pago-mixto">Pago Mixto</button>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <button class="btn btn-outline-dark w-100 py-2 fw-bold mb-3 rounded-3" id="btn-registrar-gasto">
+                                REGISTRAR MOVIMIENTO
+                            </button>
+                            <div class="text-center">
+                                <button class="btn btn-sm btn-light text-muted fw-bold w-75 rounded-pill border" id="btn-reimprimir-ultimo">
+                                    <small>REIMPRIMIR ÚLTIMO TICKET</small>
+                                </button>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -147,7 +152,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Buscador de Productos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="text" id="input-busqueda-manual" class="form-control mb-3" placeholder="Escriba nombre o código...">
@@ -157,7 +162,6 @@
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Precio</th>
-                                    <th>Stock</th>
                                     <th>Acción</th>
                                 </tr>
                             </thead>
@@ -165,6 +169,89 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalMixto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Pago Mixto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+
+                    <h4 class="fw-bold mb-3" id="mixto-total">$0.00</h4>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Efectivo</label>
+                        <input type="number" id="mixto-efectivo" class="form-control text-center fw-bold" placeholder="0">
+                    </div>
+
+                    <div class="bg-light p-3 rounded">
+                        <small class="text-muted">Transferencia</small>
+                        <h5 id="mixto-transferencia">$0.00</h5>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-warning fw-bold" id="btn-confirmar-mixto">Confirmar Pago</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        <div id="toast" class="toast align-items-center text-white border-0">
+            <div class="d-flex">
+                <div class="toast-body" id="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalMovimiento" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Movimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <label class="form-label">Tipo</label>
+                    <select id="movimiento-tipo" class="form-select mb-3">
+                        <option value="ingreso">Ingreso</option>
+                        <option value="egreso">Egreso</option>
+                    </select>
+
+                    <label class="form-label">Concepto</label>
+                    <input type="text" id="movimiento-concepto" class="form-control mb-3" placeholder="Ej: Compra proveedor">
+
+                    <label class="form-label">Monto</label>
+                    <input type="number" id="movimiento-monto" class="form-control mb-3" placeholder="0.00">
+
+                    <label class="form-label">Método</label>
+                    <select id="movimiento-metodo" class="form-select">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-guardar-movimiento">Guardar</button>
+                </div>
+
             </div>
         </div>
     </div>

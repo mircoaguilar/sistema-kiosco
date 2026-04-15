@@ -7,6 +7,7 @@ const ventasController = {
             total_venta, 
             monto_efectivo, 
             monto_transferencia, 
+            monto_pagado,
             items 
         } = req.body;
 
@@ -32,7 +33,7 @@ const ventasController = {
                     monto_efectivo || 0, 
                     monto_transferencia || 0, 
                     metodo_pago,
-                    total_venta 
+                    monto_pagado || total_venta
                 ]
             );
             
