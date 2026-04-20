@@ -61,7 +61,7 @@ CREATE TABLE `detalle_ventas` (
   KEY `id_producto` (`id_producto`),
   CONSTRAINT `detalle_ventas_ibfk_1` FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE,
   CONSTRAINT `detalle_ventas_ibfk_2` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`)
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `detalle_ventas` (
 
 LOCK TABLES `detalle_ventas` WRITE;
 /*!40000 ALTER TABLE `detalle_ventas` DISABLE KEYS */;
-INSERT INTO `detalle_ventas` VALUES (27,22,1,3.000,3000.00,9000.00),(28,23,1,1.000,3000.00,3000.00),(29,24,1,2.000,3000.00,6000.00),(30,25,2,2.000,2500.00,5000.00),(31,25,1,1.000,3000.00,3000.00),(32,26,1,2.000,3000.00,6000.00),(33,26,2,2.000,2500.00,5000.00),(34,27,1,3.000,3000.00,9000.00),(35,28,5,1.000,10000.00,10000.00),(36,29,5,1.000,10000.00,10000.00),(37,30,5,9.000,10000.00,90000.00),(38,31,5,7.000,10000.00,70000.00),(39,32,1,2.000,3000.00,6000.00),(40,33,1,1.000,3000.00,3000.00),(41,34,1,1.000,3000.00,3000.00),(42,35,1,1.000,3000.00,3000.00),(43,36,2,2.000,2500.00,5000.00),(44,37,2,2.000,2500.00,5000.00),(45,38,2,2.000,2500.00,5000.00);
+INSERT INTO `detalle_ventas` VALUES (55,44,1,1.000,3000.00,3000.00),(56,44,4,1.000,600.00,600.00),(57,45,2,1.000,2000.00,2000.00),(58,46,1,1.000,3000.00,3000.00),(59,46,2,1.000,2000.00,2000.00),(60,47,2,2.000,2000.00,4000.00),(61,48,1,1.000,3000.00,3000.00),(62,49,1,1.000,3000.00,3000.00),(63,50,2,2.000,2000.00,4000.00),(64,50,4,1.000,600.00,600.00),(65,51,1,2.000,3000.00,6000.00),(66,51,2,1.000,2000.00,2000.00);
 /*!40000 ALTER TABLE `detalle_ventas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -91,7 +91,7 @@ CREATE TABLE `movimientos_caja` (
   `metodo_pago` enum('efectivo','transferencia') DEFAULT 'efectivo',
   `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id_movimiento`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -100,7 +100,7 @@ CREATE TABLE `movimientos_caja` (
 
 LOCK TABLES `movimientos_caja` WRITE;
 /*!40000 ALTER TABLE `movimientos_caja` DISABLE KEYS */;
-INSERT INTO `movimientos_caja` VALUES (1,11,1,'egreso','Para bolsa',5000.00,'transferencia','2026-04-15 14:06:38'),(2,11,1,'ingreso','Para cambio',5000.00,'efectivo','2026-04-15 14:07:18');
+INSERT INTO `movimientos_caja` VALUES (1,11,1,'egreso','Para bolsa',5000.00,'transferencia','2026-04-15 14:06:38'),(2,11,1,'ingreso','Para cambio',5000.00,'efectivo','2026-04-15 14:07:18'),(3,13,1,'egreso','Para bolsa',5000.00,'efectivo','2026-04-18 12:35:49'),(4,13,1,'ingreso','Para cambio',10000.00,'efectivo','2026-04-18 12:37:01'),(5,14,1,'egreso','Compra urgente',1200.00,'efectivo','2026-04-18 13:02:58'),(6,14,1,'ingreso','El cliente devolvio plata',500.00,'efectivo','2026-04-18 13:03:21');
 /*!40000 ALTER TABLE `movimientos_caja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -121,10 +121,13 @@ CREATE TABLE `productos` (
   `stock` decimal(10,3) NOT NULL DEFAULT 0.000,
   `stock_minimo` decimal(10,3) DEFAULT 1.000,
   `activo` tinyint(4) NOT NULL DEFAULT 1,
+  `id_proveedor` int(11) DEFAULT NULL,
   PRIMARY KEY (`id_producto`),
   UNIQUE KEY `codigo_barras` (`codigo_barras`),
   KEY `id_categoria` (`id_categoria`),
-  CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`)
+  KEY `id_proveedor` (`id_proveedor`),
+  CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`),
+  CONSTRAINT `productos_ibfk_2` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id_proveedor`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -134,8 +137,37 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'123456','Coca-Cola',1,2000.00,3000.00,2.000,10.000,1),(2,'1234567','Fanta',1,1700.00,2500.00,29.000,10.000,1),(4,'779123456','Alfajor Guaymallen de Oro',2,350.00,600.00,20.000,5.000,0),(5,'6934177708800','Auricular',3,5000.00,10000.00,-10.000,10.000,1);
+INSERT INTO `productos` VALUES (1,'123456','Coca-Cola',1,2000.00,3000.00,18.000,10.000,1,NULL),(2,'1234567','Fanta',1,1700.00,2000.00,19.000,10.000,1,NULL),(4,'779123456','Alfajor Guaymallen de Oro',2,350.00,600.00,12.000,5.000,1,NULL),(5,'6934177708800','Auricular',3,5000.00,10000.00,-10.000,10.000,1,NULL);
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `proveedores`
+--
+
+DROP TABLE IF EXISTS `proveedores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `proveedores` (
+  `id_proveedor` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `telefono` varchar(50) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `direccion` varchar(150) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_proveedor`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `proveedores`
+--
+
+LOCK TABLES `proveedores` WRITE;
+/*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
+INSERT INTO `proveedores` VALUES (10,'Coca Cola','3704576835','Coca@gmail.com','Maipu',1,'2026-04-20 23:13:50'),(11,'Milkaut','123','aprueba@gmail.com',NULL,1,'2026-04-20 23:14:23'),(12,'Pepsi',NULL,NULL,NULL,1,'2026-04-20 23:15:39');
+/*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -158,7 +190,7 @@ CREATE TABLE `sesiones_caja` (
   PRIMARY KEY (`id_sesion`),
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `sesiones_caja_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -167,7 +199,7 @@ CREATE TABLE `sesiones_caja` (
 
 LOCK TABLES `sesiones_caja` WRITE;
 /*!40000 ALTER TABLE `sesiones_caja` DISABLE KEYS */;
-INSERT INTO `sesiones_caja` VALUES (11,1,'2026-04-14 11:16:24','2026-04-15 13:03:45',6000.00,164000.00,158000.00,98000.00,'cerrada');
+INSERT INTO `sesiones_caja` VALUES (14,1,'2026-04-18 09:59:40','2026-04-18 10:52:14',10000.00,19400.00,8700.00,7500.00,'cerrada'),(15,1,'2026-04-18 10:54:44','2026-04-18 11:02:51',10000.00,23500.00,13500.00,2100.00,'cerrada'),(16,1,'2026-04-18 11:02:58','2026-04-18 11:03:02',10000.00,10000.00,0.00,0.00,'cerrada'),(17,1,'2026-04-18 11:05:04','2026-04-18 11:05:09',1000.00,1500.00,0.00,0.00,'cerrada'),(18,1,'2026-04-18 11:07:10','2026-04-18 11:07:16',1000.00,2000.00,0.00,0.00,'cerrada'),(19,1,'2026-04-18 11:07:28','2026-04-18 11:07:33',2000.00,2000.00,0.00,0.00,'cerrada'),(20,1,'2026-04-18 11:07:45','2026-04-18 11:07:51',2000.00,1000.00,0.00,0.00,'cerrada');
 /*!40000 ALTER TABLE `sesiones_caja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -223,7 +255,7 @@ CREATE TABLE `ventas` (
   KEY `fk_ventas_sesion` (`id_sesion`),
   CONSTRAINT `fk_ventas_sesion` FOREIGN KEY (`id_sesion`) REFERENCES `sesiones_caja` (`id_sesion`),
   CONSTRAINT `ventas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -232,7 +264,7 @@ CREATE TABLE `ventas` (
 
 LOCK TABLES `ventas` WRITE;
 /*!40000 ALTER TABLE `ventas` DISABLE KEYS */;
-INSERT INTO `ventas` VALUES (22,'2026-04-14 14:20:04',1,11,9000.00,9000.00,0.00,'efectivo',9000.00),(23,'2026-04-14 14:23:36',1,11,3000.00,3000.00,0.00,'efectivo',3000.00),(24,'2026-04-14 14:31:08',1,11,6000.00,6000.00,0.00,'efectivo',6000.00),(25,'2026-04-14 14:38:13',1,11,8000.00,8000.00,0.00,'efectivo',10000.00),(26,'2026-04-14 15:41:55',1,11,11000.00,0.00,11000.00,'transferencia',11000.00),(27,'2026-04-14 15:56:21',1,11,9000.00,7000.00,2000.00,'mixto',9000.00),(28,'2026-04-14 15:58:46',1,11,10000.00,10000.00,0.00,'efectivo',10000.00),(29,'2026-04-14 16:00:10',1,11,10000.00,6000.00,4000.00,'mixto',10000.00),(30,'2026-04-14 16:00:50',1,11,90000.00,90000.00,0.00,'efectivo',90000.00),(31,'2026-04-14 16:01:05',1,11,70000.00,0.00,70000.00,'transferencia',70000.00),(32,'2026-04-14 16:01:15',1,11,6000.00,0.00,6000.00,'transferencia',6000.00),(33,'2026-04-14 16:04:45',1,11,3000.00,3000.00,0.00,'efectivo',4000.00),(34,'2026-04-15 13:15:16',1,11,3000.00,3000.00,0.00,'efectivo',4000.00),(35,'2026-04-15 13:15:27',1,11,3000.00,3000.00,0.00,'efectivo',5000.00),(36,'2026-04-15 13:40:23',1,11,5000.00,5000.00,0.00,'efectivo',6000.00),(37,'2026-04-15 13:42:58',1,11,5000.00,5000.00,0.00,'efectivo',6000.00),(38,'2026-04-15 13:43:12',1,11,5000.00,0.00,5000.00,'transferencia',5000.00);
+INSERT INTO `ventas` VALUES (44,'2026-04-18 13:00:41',1,14,3600.00,3600.00,0.00,'efectivo',4000.00),(45,'2026-04-18 13:01:41',1,14,2000.00,2000.00,0.00,'efectivo',2000.00),(46,'2026-04-18 13:02:14',1,14,5000.00,0.00,5000.00,'transferencia',5000.00),(47,'2026-04-18 13:02:32',1,14,4000.00,1500.00,2500.00,'mixto',4000.00),(48,'2026-04-18 13:15:47',1,14,3000.00,3000.00,0.00,'efectivo',4000.00),(49,'2026-04-18 13:55:35',1,15,3000.00,3000.00,0.00,'efectivo',4000.00),(50,'2026-04-18 13:58:09',1,15,4600.00,2500.00,2100.00,'mixto',4600.00),(51,'2026-04-18 13:58:24',1,15,8000.00,8000.00,0.00,'efectivo',10000.00);
 /*!40000 ALTER TABLE `ventas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -245,4 +277,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-15 13:11:58
+-- Dump completed on 2026-04-20 20:27:14

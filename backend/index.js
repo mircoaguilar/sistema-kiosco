@@ -20,6 +20,7 @@ app.use('/api/reportes',  require('./src/routes/reportes.routes'));
 app.use('/api/auth',      require('./src/routes/auth.routes'));
 app.use('/api/movimientos', require('./src/routes/movimientos.routes'));
 app.use('/api/categorias', require('./src/routes/categorias.routes'));
+app.use('/api/proveedores', require('./src/routes/proveedores.routes'));
 
 app.get('/test-db', async (req, res) => {
     try {
