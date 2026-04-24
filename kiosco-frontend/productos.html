@@ -34,6 +34,9 @@
             font-family: 'Segoe UI', Tahoma, sans-serif;
             letter-spacing: 0.5px;
         }
+        .offcanvas {
+            width: 350px !important;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -80,23 +83,41 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                 <h4 class="mb-0 fw-bold text-dark">Gestión de Productos</h4>
-                <button class="btn btn-primary fw-bold px-4" id="btnNuevoProd">
-                    <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Producto
-                </button>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-warning fw-bold" id="btnSubaMasiva">
+                        <i class="bi bi-graph-up"></i> Subir Precios
+                    </button>
+
+                    <button class="btn btn-primary fw-bold px-4" id="btnNuevoProd">
+                        <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Producto
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-8">
+                <div class="row g-2 mb-4 align-items-center">
+
+                    <div class="col-md-6">
                         <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
                             <input type="text" id="buscar-producto" class="form-control form-control-lg" placeholder="Buscar por nombre o código...">
                         </div>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-md-3">
                         <select id="filtro-categoria" class="form-select form-select-lg">
                             <option value="">Todas las Categorías</option>
                         </select>
                     </div>
+
+                    <div class="col-md-3">
+                        <select id="filtro-proveedor" class="form-select form-select-lg">
+                            <option value="">Todos los Proveedores</option>
+                        </select>
+                    </div>
+
                 </div>
 
                 <div class="table-responsive border rounded">
@@ -106,6 +127,7 @@
                                 <th width="150">Código</th>
                                 <th>Producto</th>
                                 <th>Categoría</th>
+                                <th>Proveedor</th>
                                 <th class="text-end">P. Venta</th>
                                 <th class="text-center">Stock</th>
                                 <th width="130" class="text-center">Acciones</th>
@@ -129,21 +151,27 @@
                     <div class="modal-body">
                         <input type="hidden" id="id-producto">
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Código de Barras</label>
-                            <input type="text" id="codigo" class="form-control" required autocomplete="off">
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label fw-bold small text-muted">Nombre del Producto</label>
                             <input type="text" id="nombre" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Código de Barras</label>
+                            <input type="text" id="codigo" class="form-control" required autocomplete="off">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-muted">Categoría</label>
                             <div class="input-group">
                                 <select id="categoria" class="form-select" required></select>
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalCategorias">
+                               <button type="button" class="btn btn-outline-secondary" id="btnAbrirCategorias">
                                     <i class="bi bi-gear-fill"></i>
                                 </button>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Proveedor</label>
+                            <select id="proveedor" class="form-select">
+                                <option value="">Sin proveedor</option>
+                            </select>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
@@ -181,23 +209,76 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalCategorias" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content shadow-lg">
-                <div class="modal-header">
-                    <h6 class="modal-title fw-bold">Gestión de Categorías</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCategorias">
+        <div class="offcanvas-header bg-dark text-white">
+            <h6 class="offcanvas-title fw-bold">Gestión de Categorías</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+
+        <div class="offcanvas-body">
+
+            <form id="form-nueva-cat" class="input-group mb-3">
+                <input type="text" id="input-nueva-cat" class="form-control" placeholder="Nueva categoría..." required>
+                <button class="btn btn-success">+</button>
+            </form>
+
+            <ul class="list-group" id="lista-categorias-gestion" style="max-height: 300px; overflow-y: auto;"></ul>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPrecios" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Suba Masiva de Precios</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label>% Aumentar</label>
+                    <input type="number" id="porcentaje" class="form-control" placeholder="Ej: 10">
                 </div>
-                <div class="modal-body">
-                    <form id="form-nueva-cat" class="input-group mb-3">
-                        <input type="text" id="input-nueva-cat" class="form-control form-control-sm" placeholder="Nombre..." required>
-                        <button class="btn btn-success btn-sm" type="submit">+</button>
-                    </form>
-                    <ul class="list-group list-group-flush border rounded" id="lista-categorias-gestion" style="max-height: 200px; overflow-y: auto;"></ul>
+
+                <div class="mb-3">
+                    <label>Categoría</label>
+                    <select id="filtro-cat-precio" class="form-select"></select>
                 </div>
+
+                <div class="mb-3">
+                    <label>Proveedor</label>
+                    <select id="filtro-prov-precio" class="form-select"></select>
+                </div>
+
+                <small class="text-danger">Si no seleccionás nada, se aplica a TODOS</small>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-warning" id="aplicarSuba">Aplicar</button>
+            </div>
+
+            </div>
+        </div>
+     </div>
+
+    <div class="modal fade" id="modalConfirm" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Confirmar acción</h5></div>
+            <div class="modal-body" id="modalConfirmMsg">¿Estás seguro?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarAccion">Confirmar</button>
+            </div>
             </div>
         </div>
     </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
 
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/productos.js"></script>
