@@ -10,14 +10,12 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
-// --- ESTA ES LA PARTE QUE DEBES CAMBIAR ---
 const corsOptions = {
     origin: 'https://sistema-kiosco-web.onrender.com', // La URL de tu Frontend
     optionsSuccessStatus: 200 
 };
 
 app.use(cors(corsOptions));
-// ------------------------------------------
 
 app.use(express.json());
 
