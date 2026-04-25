@@ -43,21 +43,32 @@ function renderTabla(data) {
         return;
     }
 
-    data.forEach(p => {
-        tabla.innerHTML += `
-            <tr>
-                <td class="fw-bold">${p.nombre}</td>
-                <td>${p.telefono || '-'}</td>
-                <td>${p.email || '-'}</td>
-                <td>${p.direccion || '-'}</td>
+    tabla.innerHTML = data.map(p => `
+        <tr>
+            <td class="fw-bold">${p.nombre}</td>
+            <td>${p.telefono || '-'}</td>
+            <td>${p.email || '-'}</td>
+            <td>${p.direccion || '-'}</td>
 
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editar(${p.id_proveedor})">✏️</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminar(${p.id_proveedor})">🗑️</button>
-                </td>
-            </tr>
-        `;
-    });
+            <td class="text-center">
+                <div class="btn-group shadow-sm border rounded overflow-hidden">
+                    
+                    <button class="btn btn-acciones text-primary border-end"
+                        onclick="editar(${p.id_proveedor})"
+                        title="Editar">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+
+                    <button class="btn btn-acciones text-danger"
+                        onclick="eliminar(${p.id_proveedor})"
+                        title="Eliminar">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 document.getElementById('buscar-proveedor').addEventListener('input', (e) => {

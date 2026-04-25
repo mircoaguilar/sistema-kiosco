@@ -80,7 +80,7 @@
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th>Producto</th>
-                                        <th>Precio Uni.</th>
+                                        <th>Precio Unitario/Kg</th>
                                         <th>Cantidad</th>
                                         <th>Subtotal</th>
                                         <th>Accion</th>
@@ -127,6 +127,11 @@
                                 </div>
                                 <div class="col-6">
                                     <button class="btn btn-warning text-white w-100 py-2 fw-bold rounded-3" id="btn-pago-mixto">MIXTO</button>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button class="btn btn-dark w-100 py-2 fw-bold rounded-3" id="btn-pago-tarjeta">
+                                        TARJETA
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -256,6 +261,51 @@
             </div>
         </div>
     </div>
+
+ 
+<div class="modal fade" id="modalTarjeta" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Pago con Tarjeta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-muted mb-1">Subtotal: <span id="tarjeta-subtotal">$0.00</span></p>
+                
+                <h2 class="fw-bold text-success mb-1" id="tarjeta-total-final">$0.00</h2>
+                <p class="text-danger small mb-4"><strong>+ 8% de recargo incluido</strong></p>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary fw-bold py-3" id="btn-debito">
+                        Confirmar DÉBITO
+                    </button>
+                    <button class="btn btn-dark fw-bold py-3" id="btn-credito">
+                        Confirmar CRÉDITO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPeso" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Producto Pesable</h5>
+            </div>
+            <div class="modal-body">
+                <label id="label-producto-pesable" class="fw-bold mb-2"></label>
+                <input type="number" id="input-peso-modal" class="form-control" step="0.001" placeholder="0.000">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancelar-peso">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirmar-peso">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/ventas.js"></script>

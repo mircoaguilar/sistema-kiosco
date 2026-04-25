@@ -17,7 +17,7 @@ async function imprimirTicket(venta) {
         printer.setTextDoubleHeight();
         printer.println("ELI MINI MARKET");
         printer.setTextNormal();
-        printer.println("Av. Siempre Viva 123");
+        printer.println("Barrio hipólito Yrigoyen Mzn 62 casa 15");
         printer.println("Formosa, Argentina");
         printer.drawLine();
 

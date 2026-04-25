@@ -59,14 +59,8 @@ const productosController = {
 
     crear: async (req, res) => {
         const { 
-            codigo_barras, 
-            nombre, 
-            id_categoria, 
-            id_proveedor,
-            precio_costo, 
-            precio_venta, 
-            stock, 
-            stock_minimo 
+            codigo_barras, nombre, id_categoria, id_proveedor, 
+            precio_costo, precio_venta, stock, stock_minimo, es_pesable 
         } = req.body;
 
         try {
@@ -86,19 +80,13 @@ const productosController = {
 
             const sql = `
                 INSERT INTO productos 
-                (codigo_barras, nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (codigo_barras, nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo, es_pesable) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
             const [result] = await db.query(sql, [
-                codigo_barras,
-                nombre,
-                id_categoria,
-                id_proveedor || null,
-                precio_costo,
-                precio_venta,
-                stock,
-                stock_minimo
+                codigo_barras, nombre, id_categoria, id_proveedor || null,
+                precio_costo, precio_venta, stock, stock_minimo, es_pesable
             ]);
 
             res.json({ 
@@ -117,15 +105,7 @@ const productosController = {
     actualizar: async (req, res) => {
         const { id } = req.params;
 
-        const { 
-            nombre, 
-            id_categoria, 
-            id_proveedor,
-            precio_costo, 
-            precio_venta, 
-            stock, 
-            stock_minimo 
-        } = req.body;
+        const { nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo, es_pesable } = req.body;
 
         try {
             // Validar proveedor si viene
@@ -144,26 +124,14 @@ const productosController = {
 
             const sql = `
                 UPDATE productos 
-                SET 
-                    nombre = ?, 
-                    id_categoria = ?, 
-                    id_proveedor = ?, 
-                    precio_costo = ?, 
-                    precio_venta = ?, 
-                    stock = ?, 
-                    stock_minimo = ?
+                SET nombre = ?, id_categoria = ?, id_proveedor = ?, precio_costo = ?, 
+                    precio_venta = ?, stock = ?, stock_minimo = ?, es_pesable = ?
                 WHERE id_producto = ?
             `;
 
             await db.query(sql, [
-                nombre,
-                id_categoria,
-                id_proveedor || null,
-                precio_costo,
-                precio_venta,
-                stock,
-                stock_minimo,
-                id
+                nombre, id_categoria, id_proveedor || null, precio_costo, 
+                precio_venta, stock, stock_minimo, es_pesable, id
             ]);
 
             res.json({ 

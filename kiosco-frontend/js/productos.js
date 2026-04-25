@@ -147,9 +147,9 @@ function renderizarTabla(lista) {
             <td class="text-end fw-bold text-success precio-destacado">${precioARS}</td>
             <td class="text-center">
                 <span class="badge ${esBajo ? 'bg-danger' : 'bg-dark'} px-2 py-2" style="min-width: 40px">
-                    ${p.stock}
+                    ${parseFloat(p.stock)} ${p.es_pesable == 1 ? 'kg' : 'Unidades'}
                 </span>
-                <small class="text-muted d-block mt-1" style="font-size: 0.65rem">Mín: ${p.stock_minimo}</small>
+                <small class="text-muted d-block mt-1" style="font-size: 0.65rem">Mín: ${parseFloat(p.stock_minimo)}</small>
             </td>
             <td class="text-center">
                 <div class="btn-group shadow-sm border rounded overflow-hidden">
@@ -174,8 +174,9 @@ formProd.addEventListener('submit', async (e) => {
         id_proveedor: document.getElementById('proveedor').value || null,
         precio_costo: parseFloat(document.getElementById('precio_costo').value) || 0,
         precio_venta: parseFloat(document.getElementById('precio_venta').value),
-        stock: parseInt(document.getElementById('stock').value),
-        stock_minimo: parseInt(document.getElementById('stock_minimo').value)
+        stock: parseFloat(document.getElementById('stock').value), 
+        stock_minimo: parseInt(document.getElementById('stock_minimo').value),
+        es_pesable: document.getElementById('es_pesable').checked ? 1 : 0 
     };
 
     const url = editandoID ? `${API_URL}/productos/${editandoID}` : `${API_URL}/productos`;
@@ -230,6 +231,8 @@ window.prepararEdicion = async (id) => {
     document.getElementById('precio_venta').value = p.precio_venta;
     document.getElementById('stock').value = p.stock;
     document.getElementById('stock_minimo').value = p.stock_minimo;
+    document.getElementById('es_pesable').checked = (p.es_pesable === 1); 
+    
     bootstrapModalProd.show();
 };
 
@@ -274,6 +277,7 @@ function limpiarFormulario() {
     formProd.reset();
     document.getElementById('modalTitulo').innerText = "Nuevo Producto";
     document.getElementById('stock_minimo').value = "5";
+    document.getElementById('es_pesable').checked = false; 
 }
 
 function aplicarFiltros() {
@@ -390,7 +394,7 @@ document.getElementById('form-nueva-cat').onsubmit = async (e) => {
             offcanvasCategorias.hide();
 
             setTimeout(() => {
-                bootstrapModalProd.show(); // 👈 volver al modal
+                bootstrapModalProd.show(); 
             }, 300);
         }
 
@@ -398,5 +402,16 @@ document.getElementById('form-nueva-cat').onsubmit = async (e) => {
         mostrarToast("Error al crear categoría", "danger");
     }
 };
+
+document.getElementById('es_pesable').addEventListener('change', function() {
+    const labelStock = document.querySelector('label[for="stock"]'); 
+    const inputStock = document.getElementById('stock');
+    
+    if (this.checked) {
+        inputStock.placeholder = "0.000 kg";
+    } else {
+        inputStock.placeholder = "";
+    }
+});
 
 document.getElementById('btn-logout').onclick = () => { localStorage.clear(); window.location.href = 'login.html'; };

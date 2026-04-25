@@ -2,7 +2,6 @@ const db = require('../config/db');
 const { imprimirTicket } = require('../services/printer');
 
 const ventasController = {
-    // --- FUNCIÓN 1: CREAR VENTA (La que actualizamos antes) ---
     crearVenta: async (req, res) => {
         const {
             metodo_pago,

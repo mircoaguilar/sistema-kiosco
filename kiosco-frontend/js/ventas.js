@@ -23,6 +23,9 @@ const modalMixto = new bootstrap.Modal(document.getElementById('modalMixto'));
 const mixtoTotal = document.getElementById('mixto-total');
 const mixtoEfectivo = document.getElementById('mixto-efectivo');
 const mixtoTransferencia = document.getElementById('mixto-transferencia');
+const modalTarjeta = new bootstrap.Modal(document.getElementById('modalTarjeta'));
+const tarjetaTotal = document.getElementById('tarjeta-total');
+
 
 function mostrarToast(mensaje, tipo = "success") {
     const toastEl = document.getElementById('toast');
@@ -90,44 +93,64 @@ window.seleccionarManual = (p) => {
     inputCodigo.focus();
 };
 
+let productoPendiente = null;
+
 function agregarAlCarrito(p) {
-
-    if (p.stock <= 0) {
-        mostrarToast("Producto sin stock registrado", "warning");
+    if (p.es_pesable) {
+        // Guardamos el producto y abrimos el modal en lugar del prompt
+        productoPendiente = p;
+        document.getElementById('label-producto-pesable').innerText = `¿Cuántos kg de ${p.nombre}?`;
+        document.getElementById('input-peso-modal').value = '';
+        new bootstrap.Modal(document.getElementById('modalPeso')).show();
+        setTimeout(() => document.getElementById('input-peso-modal').focus(), 500);
+    } else {
+        // Lógica normal
+        const i = carrito.findIndex(item => item.id_producto === p.id_producto);
+        if (i !== -1) carrito[i].cantidad += 1;
+        else carrito.push({
+            id_producto: p.id_producto,
+            nombre: p.nombre,
+            precio_unitario: parseFloat(p.precio_venta),
+            cantidad: 1
+        });
+        renderizar();
     }
-
-    const i = carrito.findIndex(item => item.id_producto === p.id_producto);
-
-    if (i !== -1) carrito[i].cantidad++;
-    else carrito.push({
-        id_producto: p.id_producto,
-        nombre: p.nombre,
-        precio_unitario: parseFloat(p.precio_venta),
-        cantidad: 1
-    });
-
-    renderizar();
 }
 
 function renderizar() {
     tablaCarrito.innerHTML = '';
     let total = 0;
+
     carrito.forEach((item, index) => {
         const sub = item.precio_unitario * item.cantidad;
         total += sub;
+
+        // Determinamos la etiqueta: Si es pesable, usamos 'kg', sino 'unid.'
+        const unidadMedida = item.es_pesable ? "kg" : "";
+        
+        // Formato: si es pesable mostramos 3 decimales, sino 0 decimales (para unidades)
+        const displayCantidad = item.es_pesable ? item.cantidad.toFixed(3) : item.cantidad;
+
         tablaCarrito.innerHTML += `
             <tr>
                 <td class="fw-bold">${item.nombre}</td>
                 <td>$${item.precio_unitario.toFixed(2)}</td>
                 <td>
-                    <button class="btn btn-sm btn-light border" onclick="modificar(${index}, -1)">-</button>
-                    <span class="mx-2">${item.cantidad}</span>
-                    <button class="btn btn-sm btn-light border" onclick="modificar(${index}, 1)">+</button>
+                    ${!item.es_pesable ? `
+                        <button class="btn btn-sm btn-light border" onclick="modificar(${index}, -1)">-</button>
+                    ` : ''}
+                    
+                    <span class="mx-2">${displayCantidad} ${unidadMedida}</span>
+                    
+                    ${!item.es_pesable ? `
+                        <button class="btn btn-sm btn-light border" onclick="modificar(${index}, 1)">+</button>
+                    ` : ''}
                 </td>
                 <td class="text-success fw-bold">$${sub.toFixed(2)}</td>
                 <td><button class="btn btn-danger btn-sm" onclick="eliminar(${index})">X</button></td>
             </tr>`;
     });
+
     totalVentaHTML.innerText = `$${total.toFixed(2)}`;
     calcularVuelto();
 }
@@ -155,38 +178,31 @@ function calcularVuelto() {
 
 async function procesarVenta(metodo) {
     if (carrito.length === 0) return mostrarToast("Carrito vacío", "warning");
-    
+
     const totalVenta = carrito.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);
-    const imprimirTicket = document.getElementById('check-ticket').checked;
+    const imprimirTicket = document.getElementById('check-ticket') ? document.getElementById('check-ticket').checked : false;
 
     const pagaEfectivo = parseFloat(inputPagaCon.value) || 0;
-    const pagaDigital = window.montoDigitalTemporal || 0;
+    const pagaDigital = parseFloat(window.montoDigitalTemporal) || 0;
 
-    if (metodo === 'efectivo') {
-        if (pagaEfectivo < totalVenta) {
-            return mostrarToast("El efectivo recibido es menor al total", "warning");
-        }
+    // VALIDACIÓN: Evitar ventas sin dinero
+    if (metodo === 'efectivo' && pagaEfectivo < totalVenta) {
+        return mostrarToast("El efectivo recibido es menor al total", "warning");
     }
 
     if (metodo === 'mixto') {
-        if ((pagaEfectivo + pagaDigital) < totalVenta) {
-            return alert("El monto total (Efectivo + Transferencia) no cubre la venta");
+        const suma = pagaEfectivo + pagaDigital;
+        if (Math.abs(suma - totalVenta) > 0.01) {
+            return alert("La suma de efectivo y transferencia no coincide con el total de la venta");
+        }
+        if (pagaEfectivo <= 0 || pagaDigital <= 0) {
+            return alert("El monto en efectivo y el monto digital deben ser mayores a 0");
         }
     }
 
-    const montoEfectivo = (metodo === 'efectivo')
-        ? totalVenta
-        : (metodo === 'mixto' ? pagaEfectivo : 0);
-
-    const montoDigital = (metodo === 'transferencia')
-        ? totalVenta
-        : (metodo === 'mixto' ? pagaDigital : 0);
-
-    const montoPagado = (metodo === 'efectivo')
-        ? pagaEfectivo
-        : (metodo === 'transferencia')
-            ? totalVenta
-            : (pagaEfectivo + pagaDigital);
+    const montoEfectivo = (metodo === 'efectivo') ? totalVenta : (metodo === 'mixto' ? pagaEfectivo : 0);
+    const montoDigital = (metodo === 'transferencia') ? totalVenta : (metodo === 'mixto' ? pagaDigital : 0);
+    const montoPagado = (metodo === 'efectivo') ? pagaEfectivo : (metodo === 'transferencia') ? totalVenta : (pagaEfectivo + pagaDigital);
 
     const venta = {
         id_usuario: parseInt(idUsuario),
@@ -216,10 +232,10 @@ async function procesarVenta(metodo) {
         carrito = [];
         inputPagaCon.value = '';
         window.montoDigitalTemporal = 0;
-
         renderizar();
 
-    } catch { 
+    } catch (e) { 
+        console.error(e);
         mostrarToast("Error al procesar la venta", "error"); 
     }
 }
@@ -274,6 +290,23 @@ document.getElementById('btn-guardar-movimiento').onclick = async () => {
 
 document.getElementById('btn-pago-efectivo').onclick = () => procesarVenta('efectivo');
 document.getElementById('btn-pago-digital').onclick = () => procesarVenta('transferencia');
+document.getElementById('btn-pago-tarjeta').onclick = () => {
+    if (carrito.length === 0) {
+        return mostrarToast("Carrito vacío", "warning");
+    }
+
+    const totalBase = carrito.reduce((acc, item) =>
+        acc + (item.precio_unitario * item.cantidad), 0
+    );
+
+    const recargo = totalBase * 0.08;
+    const totalConRecargo = totalBase + recargo;
+
+    document.getElementById('tarjeta-subtotal').innerText = `$${totalBase.toFixed(2)}`;
+    document.getElementById('tarjeta-total-final').innerText = `$${totalConRecargo.toFixed(2)}`;
+
+    modalTarjeta.show();
+};
 
 document.getElementById('btn-pago-mixto').onclick = () => {
     if (carrito.length === 0) return mostrarToast("Carrito vacío", "warning");
@@ -313,6 +346,34 @@ document.getElementById('btn-confirmar-mixto').onclick = () => {
     procesarVenta('mixto');
 };
 
+document.getElementById('btn-confirmar-peso').onclick = () => {
+    const peso = parseFloat(document.getElementById('input-peso-modal').value);
+    
+    if (peso > 0 && productoPendiente) {
+        const i = carrito.findIndex(item => item.id_producto === productoPendiente.id_producto);
+
+        if (i !== -1) {
+            carrito[i].cantidad += peso;
+        } else {
+            carrito.push({
+                id_producto: productoPendiente.id_producto,
+                nombre: productoPendiente.nombre,
+                precio_unitario: parseFloat(productoPendiente.precio_venta),
+                cantidad: peso,
+                es_pesable: true
+            });
+        }
+        renderizar();
+        bootstrap.Modal.getInstance(document.getElementById('modalPeso')).hide();
+        productoPendiente = null;
+    }
+};
+
+document.getElementById('btn-cancelar-peso').onclick = () => {
+    productoPendiente = null;
+    bootstrap.Modal.getInstance(document.getElementById('modalPeso')).hide();
+};
+
 document.getElementById('btn-reimprimir-ultimo').onclick = async () => {
     try {
         const res = await fetch(`${API_URL}/ventas/reimprimir`, {
@@ -326,6 +387,16 @@ document.getElementById('btn-reimprimir-ultimo').onclick = async () => {
     } catch {
         mostrarToast("Error al reimprimir", "error");
     }
+};
+
+document.getElementById('btn-debito').onclick = () => {
+    modalTarjeta.hide();
+    procesarVenta('tarjeta', 'debito'); 
+};
+
+document.getElementById('btn-credito').onclick = () => {
+    modalTarjeta.hide();
+    procesarVenta('tarjeta', 'credito'); 
 };
 
 document.getElementById('btn-logout').onclick = () => { 

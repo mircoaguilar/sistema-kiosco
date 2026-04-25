@@ -106,6 +106,14 @@
                 </div>
             </div>
             <div class="col-md-2">
+                <div class="card shadow-sm border-start border-warning border-start-4 h-100">
+                    <div class="card-body">
+                        <small class="text-muted fw-bold d-block mb-1">VENTAS TARJETA</small>
+                        <h4 class="fw-bold m-0 text-warning" id="monto-tarjeta">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
                 <div class="card shadow-sm border-start border-primary border-start-4 h-100">
                     <div class="card-body">
                         <small class="text-muted fw-bold d-block mb-1">INGRESOS</small>
@@ -121,15 +129,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="card shadow-sm bg-dark text-white text-center h-100">
-                    <div class="card-body">
-                        <small class="text-white-50 fw-bold d-block mb-1">EFECTIVO ESPERADO</small>
-                        <h3 class="fw-bold text-warning m-0" id="monto-esperado">$0.00</h3>
-                    </div>
-                </div>
-            </div>
         </div>
+        
 
         <div class="row">
             <div class="col-lg-8">
@@ -158,13 +159,20 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="card shadow-sm bg-white p-3 border-0 text-center">
+                <div class="card shadow-sm bg-white p-3 border-0 text-center mb-3">
                     <h6 class="fw-bold mb-3 text-dark">ARQUEO DE CAJA</h6>
                     <p class="text-muted small">Al cerrar se comparará el efectivo real con el sistema.</p>
                     <div class="d-grid gap-2">
                         <button class="btn btn-danger py-3 fw-bold" id="btn-cerrar-caja">
                             REALIZAR CIERRE DE CAJA
                         </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm bg-dark text-white text-center">
+                    <div class="card-body">
+                        <small class="text-white-50 fw-bold d-block mb-1">EFECTIVO ESPERADO</small>
+                        <h3 class="fw-bold text-warning m-0" id="monto-esperado">$0.00</h3>
                     </div>
                 </div>
             </div>

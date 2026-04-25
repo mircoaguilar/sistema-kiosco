@@ -23,7 +23,13 @@ const cajaController = {
 
     abrir: async (req, res) => {
         const { monto_inicial } = req.body;
+        const monto = parseFloat(monto_inicial);
         const id_usuario = req.user.id;
+
+        // VALIDACIÓN DE SEGURIDAD
+        if (isNaN(monto) || monto < 0) {
+            return res.status(400).json({ msg: "El monto inicial no puede ser negativo" });
+        }
 
         try {
             const [abierta] = await db.query(
@@ -37,11 +43,10 @@ const cajaController = {
 
             const [result] = await db.query(
                 'INSERT INTO sesiones_caja (id_usuario, monto_inicial, estado) VALUES (?, ?, "abierta")',
-                [id_usuario, monto_inicial]
+                [id_usuario, monto]
             );
 
             res.json({ message: "Caja abierta", id_sesion: result.insertId });
-
         } catch (error) {
             res.status(500).json({ error: "Error al abrir" });
         }
@@ -51,69 +56,41 @@ const cajaController = {
         const { id_sesion, monto_final_efectivo } = req.body;
 
         try {
-            const [sesionData] = await db.query(
-                'SELECT monto_inicial FROM sesiones_caja WHERE id_sesion = ?',
-                [id_sesion]
-            );
-
-            if (sesionData.length === 0) {
-                return res.status(404).json({ error: "No se encontró la sesión" });
-            }
+            const [sesionData] = await db.query('SELECT monto_inicial FROM sesiones_caja WHERE id_sesion = ?', [id_sesion]);
+            if (sesionData.length === 0) return res.status(404).json({ error: "No se encontró la sesión" });
 
             const montoInicial = parseFloat(sesionData[0].monto_inicial);
 
             const [ventas] = await db.query(
-                'SELECT SUM(monto_efectivo) as efe, SUM(monto_transferencia) as dig FROM ventas WHERE id_sesion = ?',
+                'SELECT SUM(monto_efectivo) as efe, SUM(monto_transferencia) as dig, SUM(monto_tarjeta) as tar FROM ventas WHERE id_sesion = ?',
                 [id_sesion]
             );
 
             const vEfe = parseFloat(ventas[0].efe || 0);
             const vDig = parseFloat(ventas[0].dig || 0);
+            const vTar = parseFloat(ventas[0].tar || 0);
 
-            const [movimientosTotales] = await db.query(
-                `SELECT 
-                    SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as total_egresos,
-                    SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos
-                FROM movimientos_caja 
-                WHERE id_sesion = ?`,
-                [id_sesion]
-            );
+            const [movs] = await db.query(`
+                SELECT 
+                    SUM(CASE WHEN tipo = 'egreso' AND metodo_pago = 'efectivo' THEN monto ELSE 0 END) as efe_egresos,
+                    SUM(CASE WHEN tipo = 'ingreso' AND metodo_pago = 'efectivo' THEN monto ELSE 0 END) as efe_ingresos
+                FROM movimientos_caja WHERE id_sesion = ?`, [id_sesion]);
 
-            const totalEgresos = parseFloat(movimientosTotales[0].total_egresos || 0);
-            const totalIngresos = parseFloat(movimientosTotales[0].total_ingresos || 0);
+            const efeEgresos = parseFloat(movs[0].efe_egresos || 0);
+            const efeIngresos = parseFloat(movs[0].efe_ingresos || 0);
 
-            const montoEsperado = (montoInicial + vEfe + totalIngresos) - totalEgresos;
+            // CÁLCULO DE EFECTIVO ESPERADO (Solo efectivo)
+            const montoEsperado = (montoInicial + vEfe + efeIngresos) - efeEgresos;
             const diferencia = parseFloat(monto_final_efectivo) - montoEsperado;
 
-            await db.query(
-                `UPDATE sesiones_caja SET 
-                    monto_ventas_efectivo = ?, 
-                    monto_ventas_digital = ?, 
-                    monto_ventas_tarjeta = ?, 
-                    monto_final_efectivo = ?, 
-                    estado = 'cerrada', 
-                    fecha_cierre = NOW() 
-                WHERE id_sesion = ?`,
-                [vEfe, vDig, vTar, monto_final_efectivo, id_sesion]
-            );
+            await db.query(`UPDATE sesiones_caja SET 
+                    monto_ventas_efectivo = ?, monto_ventas_digital = ?, monto_ventas_tarjeta = ?, 
+                    monto_final_efectivo = ?, estado = 'cerrada', fecha_cierre = NOW() 
+                WHERE id_sesion = ?`, [vEfe, vDig, vTar, monto_final_efectivo, id_sesion]);
 
-            res.json({
-                message: "Caja cerrada correctamente",
-                detalle: {
-                    monto_inicial: montoInicial,
-                    ventas_efectivo: vEfe,
-                    ventas_digital: vDig,
-                    total_ingresos: totalIngresos,
-                    total_egresos: totalEgresos,
-                    monto_esperado_en_caja: montoEsperado,
-                    monto_real_ingresado: parseFloat(monto_final_efectivo),
-                    diferencia: diferencia
-                }
-            });
-
+            res.json({ message: "Caja cerrada correctamente", detalle: { diferencia } });
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: "Error al cerrar la caja", details: error.message });
+            res.status(500).json({ error: "Error al cerrar", details: error.message });
         }
     },
 
@@ -162,13 +139,16 @@ const cajaController = {
             );
 
             const [movimientosTotales] = await db.query(
-                `SELECT 
-                    SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as total_egresos,
-                    SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos
-                FROM movimientos_caja 
-                WHERE id_sesion = ?`,
-                [id_sesion]
-            );
+            `SELECT 
+                SUM(CASE WHEN tipo = 'egreso' AND metodo_pago = 'efectivo' THEN monto ELSE 0 END) as total_egresos_efe,
+                SUM(CASE WHEN tipo = 'ingreso' AND metodo_pago = 'efectivo' THEN monto ELSE 0 END) as total_ingresos_efe,
+                
+                SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as total_egresos_total,
+                SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos_total
+            FROM movimientos_caja 
+            WHERE id_sesion = ?`,
+            [id_sesion]
+        );
 
             const [movimientos] = await db.query(`
                 SELECT 
@@ -208,7 +188,7 @@ const cajaController = {
                 fecha_hora,
                 concepto as descripcion,
                 tipo,
-                'efectivo' as medio,
+                metodo_pago as medio,
                 monto
                 FROM movimientos_caja 
                 WHERE id_sesion = ?
@@ -220,8 +200,11 @@ const cajaController = {
             const vEfe = parseFloat(ventas[0].efe || 0);
             const vDig = parseFloat(ventas[0].dig || 0);
             const vTar = parseFloat(ventas[0].tar || 0);
-            const totalEgresos = parseFloat(movimientosTotales[0].total_egresos || 0);
-            const totalIngresos = parseFloat(movimientosTotales[0].total_ingresos || 0);
+            const totalEgresosEfe = parseFloat(movimientosTotales[0].total_egresos_efe || 0);
+            const totalIngresosEfe = parseFloat(movimientosTotales[0].total_ingresos_efe || 0);
+
+            const totalEgresosTotal = parseFloat(movimientosTotales[0].total_egresos_total || 0);
+            const totalIngresosTotal = parseFloat(movimientosTotales[0].total_ingresos_total || 0);
 
             res.json({
                 abierta: true,
@@ -230,9 +213,10 @@ const cajaController = {
                 ventas_efectivo: vEfe,
                 ventas_digital: vDig,
                 ventas_tarjeta: vTar,
-                total_ingresos: totalIngresos,
-                total_egresos: totalEgresos,
-                efectivo_esperado: (montoInicial + vEfe + totalIngresos) - totalEgresos,
+                total_ingresos: totalIngresosTotal, // Envías el total REAL a la card
+                total_egresos: totalEgresosTotal,   // Envías el total REAL a la card
+                // Aquí calculas el esperado solo con los valores de EFECTIVO:
+                efectivo_esperado: (montoInicial + vEfe + totalIngresosEfe) - totalEgresosEfe,
                 movimientos
             });
 

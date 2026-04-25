@@ -70,7 +70,7 @@ function renderTabla(data) {
         <tr>
             <td>${i + 1}</td>
             <td>${p.nombre}</td>
-            <td class="fw-bold">${p.cantidad}</td>
+            <td class="fw-bold">${parseInt(p.cantidad)}</td>
         </tr>
     `).join('');
 }

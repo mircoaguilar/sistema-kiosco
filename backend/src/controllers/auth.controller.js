@@ -1,5 +1,5 @@
 const db = require('../config/db');
-// const bcrypt = require('bcrypt'); // Lo comentamos por ahora
+const bcrypt = require('bcrypt'); // Lo comentamos por ahora
 const jwt = require('jsonwebtoken');
 
 const authController = {
@@ -10,13 +10,15 @@ const authController = {
             const [rows] = await db.query('SELECT * FROM usuarios WHERE usuario = ? AND estado = 1', [usuario]);
             
             if (rows.length === 0) {
-                return res.status(401).json({ message: "Credenciales inválidas (usuario no existe)" });
+                return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
             }
 
             const user = rows[0];
 
-            if (password !== user.password) {
-                return res.status(401).json({ message: "Credenciales inválidas (contraseña incorrecta)" });
+            const match = await bcrypt.compare(password, user.password);
+
+            if (!match) {
+                return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
             }
 
             if (!process.env.JWT_SECRET) {

@@ -43,6 +43,7 @@ async function verificarEstadoCaja() {
         document.getElementById('monto-inicial').innerText = formatear(data.monto_inicial);
         document.getElementById('monto-ventas').innerText = formatear(data.ventas_efectivo);
         document.getElementById('monto-digital').innerText = formatear(data.ventas_digital);
+        document.getElementById('monto-tarjeta').innerText = formatear(data.ventas_tarjeta);
         document.getElementById('monto-ingresos').innerText = formatear(data.total_ingresos);
         document.getElementById('monto-gastos').innerText = formatear(data.total_egresos);
         document.getElementById('monto-esperado').innerText = formatear(data.efectivo_esperado);
@@ -59,6 +60,12 @@ document.getElementById('formAbrirCaja').addEventListener('submit', async (e) =>
     e.preventDefault();
     const monto = document.getElementById('monto_inicial_input').value;
 
+    if (isNaN(monto) || monto < 0) {
+        alert("El monto inicial no puede ser negativo ni estar vacío.");
+        inputMonto.focus();
+        return;
+    }
+    
     try {
         const res = await fetch(`${API_URL}/caja/abrir`, {
             method: 'POST',
@@ -184,6 +191,9 @@ function pintarMovimientos(movimientos) {
         if (m.medio === 'efectivo') {
             badgeMedio = 'bg-success-subtle text-success';
             textoMedio = 'Efectivo';
+        } else if (m.medio === 'tarjeta') {
+            badgeMedio = 'bg-warning-subtle text-warning';
+            textoMedio = 'Tarjeta';
         } else {
             badgeMedio = 'bg-info-subtle text-info';
             textoMedio = 'Transferencia/QR';
