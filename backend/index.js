@@ -11,15 +11,19 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 
 const corsOptions = {
-    origin: 'https://sistema-kiosco-web.onrender.com', // La URL de tu Frontend
-    optionsSuccessStatus: 200 
+    origin: ['https://sistema-kiosco-web.onrender.com', 'http://localhost:3000'], // Permitir también desarrollo local
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'], // Headers permitidos
+    credentials: true, // Si usas cookies/sessions
+    optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
 
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
-// Tus rutas siguen igual...
 app.use('/api/productos', require('./src/routes/productos.routes'));
 app.use('/api/ventas',    require('./src/routes/ventas.routes'));
 app.use('/api/caja',      require('./src/routes/caja.routes'));
