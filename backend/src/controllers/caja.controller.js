@@ -149,7 +149,7 @@ const cajaController = {
 
         try {
             const [sesion] = await db.query(
-                'SELECT id_sesion, monto_inicial, fecha_apertura FROM sesiones_caja WHERE id_usuario = ? AND estado = "abierta"',
+                "SELECT id_sesion, monto_inicial, fecha_apertura FROM sesiones_caja WHERE id_usuario = ? AND estado = 'abierta'",
                 [id_usuario]
             );
 
