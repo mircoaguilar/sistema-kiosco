@@ -12,7 +12,7 @@ const app = express();
 
 const corsOptions = {
     origin: [
-        'https://sistema-kiosco-web.onrender.com',
+        'https://kiosco-staging.onrender.com',
         'http://localhost:3000'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
