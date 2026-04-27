@@ -176,18 +176,18 @@ window.editar = function(id) {
 window.eliminar = async function(id) {
     if (!confirm("¿Eliminar proveedor?")) return;
 
-    mostrarToast("Proveedor eliminado", "success");
-
     try {
-        const res = await fetch(`${API_URL}/${id}`, {
+        const res = await fetch(`${API_URL}/proveedores/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (res.ok) {
+            mostrarToast("Proveedor eliminado", "success");
             cargarProveedores();
         } else {
-            alert("Error al eliminar");
+            const err = await res.json();
+            mostrarToast(err.error || "Error al eliminar", "danger");
         }
 
     } catch (error) {
