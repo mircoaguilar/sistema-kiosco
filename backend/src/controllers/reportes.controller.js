@@ -54,6 +54,7 @@ const reportesController = {
                 LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
                 LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
                 JOIN ventas v ON dv.id_venta = v.id_venta
+                AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtrosProductos}
                 GROUP BY p.id_producto
                 ORDER BY total DESC
@@ -119,6 +120,7 @@ const reportesController = {
                 FROM detalle_ventas dv
                 JOIN productos p ON dv.id_producto = p.id_producto
                 JOIN ventas v ON dv.id_venta = v.id_venta
+                AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtros}
                 GROUP BY p.id_producto
                 ORDER BY cantidad DESC
