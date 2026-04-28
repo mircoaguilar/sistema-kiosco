@@ -8,9 +8,9 @@ router.post('/', verificarToken, verificarCajaAbierta, ventasController.crearVen
 
 router.get('/reimprimir', verificarToken, ventasController.reimprimirUltimo);
 
-router.get('/historial', verificarToken, ventasController.listarVentas);
+router.get('/historial', verificarToken, ventasController.historialVentas);
 
-router.get('/:id', verificarToken, ventasController.obtenerDetalleVenta);
+router.get('/:id', verificarToken, ventasController.detalleVenta);
 
 router.put('/:id/anular', verificarToken, ventasController.anularVenta);
 
