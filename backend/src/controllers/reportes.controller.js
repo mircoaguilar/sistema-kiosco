@@ -12,6 +12,8 @@ const reportesController = {
             let filtrosVentas = `WHERE 1=1`;
             let paramsVentas = [];
 
+            filtrosVentas += ` AND COALESCE(v.estado, 'activa') = 'activa'`;
+
             if (desde && hasta) {
                 filtrosProductos += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
                 filtrosVentas += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
