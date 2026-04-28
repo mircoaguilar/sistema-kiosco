@@ -86,8 +86,14 @@ const cajaController = {
 
             const montoInicial = parseFloat(sesionData[0].monto_inicial);
 
-            const [ventas] = await db.query(
-                'SELECT SUM(monto_efectivo) as efe, SUM(monto_transferencia) as dig, SUM(monto_tarjeta) as tar FROM ventas WHERE id_sesion = ?',
+           const [ventas] = await db.query(
+                `SELECT 
+                    SUM(monto_efectivo) as efe,
+                    SUM(monto_transferencia) as dig,
+                    SUM(monto_tarjeta) as tar
+                FROM ventas
+                WHERE id_sesion = ?
+                AND COALESCE(estado, 'activa') = 'activa'`,
                 [id_sesion]
             );
 
@@ -159,7 +165,13 @@ const cajaController = {
             const montoInicial = parseFloat(sesion[0].monto_inicial);
 
             const [ventas] = await db.query(
-                'SELECT SUM(monto_efectivo) as efe, SUM(monto_transferencia) as dig, SUM(monto_tarjeta) as tar FROM ventas WHERE id_sesion = ?',
+                `SELECT 
+                    SUM(monto_efectivo) as efe,
+                    SUM(monto_transferencia) as dig,
+                    SUM(monto_tarjeta) as tar
+                FROM ventas
+                WHERE id_sesion = ?
+                AND COALESCE(estado, 'activa') = 'activa'`,
                 [id_sesion]
             );
 
@@ -184,6 +196,7 @@ const cajaController = {
                 monto_efectivo as monto
                 FROM ventas 
                 WHERE id_sesion = ? AND monto_efectivo > 0
+                AND COALESCE(estado, 'activa') = 'activa'
 
                 UNION ALL
 
@@ -195,6 +208,7 @@ const cajaController = {
                 monto_transferencia as monto
                 FROM ventas 
                 WHERE id_sesion = ? AND monto_transferencia > 0
+                AND COALESCE(estado, 'activa') = 'activa'
 
                 UNION ALL
 
@@ -206,6 +220,7 @@ const cajaController = {
                 monto_tarjeta as monto
                 FROM ventas 
                 WHERE id_sesion = ? AND monto_tarjeta > 0
+                AND COALESCE(estado, 'activa') = 'activa'
 
                 UNION ALL
 
