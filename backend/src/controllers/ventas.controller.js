@@ -2,7 +2,6 @@ const db = require('../config/db');
 const { imprimirTicket } = require('../services/printer');
 
 const ventasController = {
-
     crearVenta: async (req, res) => {
         const {
             metodo_pago,
@@ -47,106 +46,62 @@ const ventasController = {
                 metodo_pago, tipo_tarjeta,
                 recargo_porcentaje, recargo_monto)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    id_usuario,
-                    id_sesion,
-                    base_total,
-                    total_final,
-                    efectivoFinal,
-                    transferenciaFinal,
-                    tarjetaFinal,
-                    metodo_pago,
-                    tipo_tarjeta || null,
-                    recargo_porcentaje,
-                    recargo_monto
-                ]
+                [id_usuario, id_sesion, base_total, total_final, efectivoFinal, transferenciaFinal, tarjetaFinal, metodo_pago, tipo_tarjeta || null, recargo_porcentaje, recargo_monto]
             );
 
             const id_venta = ventaResult.insertId;
 
             for (const item of items) {
                 await connection.query(
-                    `INSERT INTO detalle_ventas 
-                    (id_venta, id_producto, cantidad, precio_unitario, subtotal) 
-                    VALUES (?, ?, ?, ?, ?)`,
-                    [
-                        id_venta,
-                        item.id_producto,
-                        item.cantidad,
-                        item.precio_unitario,
-                        item.cantidad * item.precio_unitario
-                    ]
+                    `INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)`,
+                    [id_venta, item.id_producto, item.cantidad, item.precio_unitario, item.cantidad * item.precio_unitario]
                 );
-
-                await connection.query(
-                    `UPDATE productos 
-                     SET stock = stock - ? 
-                     WHERE id_producto = ?`,
-                    [item.cantidad, item.id_producto]
-                );
+                await connection.query(`UPDATE productos SET stock = stock - ? WHERE id_producto = ?`, [item.cantidad, item.id_producto]);
             }
 
             await connection.commit();
 
             if (imprimir_ticket) {
                 try {
-                    await imprimirTicket({
-                        id_venta,
-                        total_venta: base_total,
-                        total_final,
-                        metodo_pago,
-                        tipo_tarjeta,
-                        recargo_monto,
-                        monto_pagado: total_final,
-                        items
-                    });
-                } catch (pErr) {
-                    console.error("Error ticket:", pErr);
-                }
+                    await imprimirTicket({ id_venta, total_venta: base_total, total_final, metodo_pago, tipo_tarjeta, recargo_monto, monto_pagado: total_final, items });
+                } catch (pErr) { console.error("Error ticket:", pErr); }
             }
 
-            res.json({
-                message: "Venta registrada",
-                id_venta
-            });
+            res.json({ message: "Venta registrada", id_venta });
 
         } catch (error) {
             await connection.rollback();
-            res.status(500).json({
-                error: error.message
-            });
+            res.status(500).json({ error: error.message });
         } finally {
             connection.release();
         }
     },
 
+    // --- FUNCIÓN 2: REIMPRIMIR (Esta es la que te faltaba y causaba el crash) ---
     reimprimirUltimo: async (req, res) => {
         try {
+            // Buscamos la última venta del usuario actual
             const [ventas] = await db.query(
-                `SELECT * 
-                 FROM ventas 
-                 WHERE id_usuario = ? 
-                 ORDER BY id_venta DESC 
-                 LIMIT 1`,
+                `SELECT * FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1`,
                 [req.user.id]
             );
 
             if (ventas.length === 0) {
-                return res.status(404).json({
-                    error: "No hay ventas para reimprimir"
-                });
+                return res.status(404).json({ error: "No hay ventas para reimprimir" });
             }
 
             const venta = ventas[0];
 
+            // Buscamos los items de esa venta
             const [items] = await db.query(
                 `SELECT dv.*, p.nombre 
-                 FROM detalle_ventas dv
-                 JOIN productos p ON dv.id_producto = p.id_producto
+                 FROM detalle_ventas dv 
+                 JOIN productos p ON dv.id_producto = p.id_producto 
                  WHERE dv.id_venta = ?`,
                 [venta.id_venta]
             );
 
+            // Llamamos al servicio de impresión
             await imprimirTicket({
                 id_venta: venta.id_venta,
                 total_venta: venta.total_venta,
@@ -158,18 +113,12 @@ const ventasController = {
                 items
             });
 
-            res.json({
-                message: "Ticket enviado a la impresora"
-            });
-
+            res.json({ message: "Ticket enviado a la impresora" });
         } catch (error) {
             console.error(error);
-            res.status(500).json({
-                error: "Error al reimprimir"
-            });
+            res.status(500).json({ error: "Error al reimprimir" });
         }
     },
-
     historialVentas: async (req, res) => {
         try {
             const { desde, hasta, estado } = req.query;
