@@ -53,7 +53,8 @@ const reportesController = {
                     SUM(dv.subtotal) AS total
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
+                LEFT JOIN categorias c 
+                ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
                 LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
                 JOIN ventas v ON dv.id_venta = v.id_venta
                 AND COALESCE(v.estado, 'activa') = 'activa'

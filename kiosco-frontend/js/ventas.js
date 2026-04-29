@@ -240,14 +240,15 @@ async function procesarVenta(metodo) {
     }
 }
 
-function agregarVentaRapida(descripcion, monto, cantidad = 1) {
+function agregarVentaRapida(descripcion, monto, cantidad = 1, id_categoria = null) {
     carrito.push({
         id_producto: null,
         nombre: descripcion,
         descripcion_manual: descripcion,
         precio_unitario: parseFloat(monto),
         cantidad: parseFloat(cantidad),
-        es_manual: true
+        es_manual: true,
+        id_categoria: id_categoria
     });
 
     renderizar();

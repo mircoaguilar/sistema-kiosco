@@ -55,14 +55,15 @@ const ventasController = {
                 if (item.es_manual) {
                     await connection.query(
                         `INSERT INTO detalle_ventas 
-                        (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal) 
-                        VALUES (?, NULL, ?, 1, ?, ?, ?)`,
+                        (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal, id_categoria) 
+                        VALUES (?, NULL, ?, 1, ?, ?, ?, ?)`,
                         [
                             id_venta,
                             item.descripcion_manual,
                             item.cantidad,
                             item.precio_unitario,
-                            item.cantidad * item.precio_unitario
+                            item.cantidad * item.precio_unitario,
+                            item.id_categoria || null
                         ]
                     );
                 } else {
