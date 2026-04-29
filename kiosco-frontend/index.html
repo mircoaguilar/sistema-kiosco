@@ -320,17 +320,24 @@
 
       <h5 class="mb-3">Venta rápida</h5>
 
+      <label class="form-label">Descripción del producto / servicio</label>
       <input id="vr-descripcion" class="form-control mb-2" placeholder="Ej: Verduras varias">
 
-      <select id="vr-categoria" class="form-control mb-2"></select>
+      <label class="form-label">Categoría</label>
+      <select id="vr-categoria" class="form-control mb-2">
+        <option value="">Seleccionar categoría</option>
+      </select>
 
-      <input id="vr-monto" type="number" class="form-control mb-2" placeholder="Monto">
-
-      <input id="vr-cantidad" type="number" class="form-control mb-3" value="1">
+      <label class="form-label">Monto</label>
+      <input id="vr-monto" type="number" class="form-control mb-2" placeholder="0.00">
 
       <button class="btn btn-success w-100" onclick="agregarVentaRapida()">
-        Agregar
+        Agregar a la venta
       </button>
+
+      <small class="text-muted d-block mt-2">
+        Este ítem se registra como venta manual
+      </small>
 
     </div>
   </div>

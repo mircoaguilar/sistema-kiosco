@@ -248,15 +248,15 @@ function abrirModalVentaRapida() {
     document.getElementById("vr-monto").value = '';
     document.getElementById("vr-cantidad").value = 1;
     document.getElementById("vr-categoria").value = '';
+
+    cargarCategoriasVentaRapida();
 }
 
 function agregarVentaRapida() {
     const descripcion = document.getElementById("vr-descripcion").value;
     const categoria = document.getElementById("vr-categoria").value;
     const monto = parseFloat(document.getElementById("vr-monto").value);
-    const cantidad = parseFloat(document.getElementById("vr-cantidad").value || 1);
-
-    cargarCategoriasVentaRapida();
+    const cantidad = parseFloat(document.getElementById("vr-cantidad").value) || 1;
 
     if (!descripcion || !monto || !categoria) {
         alert("Completa todos los campos");
@@ -269,15 +269,14 @@ function agregarVentaRapida() {
         descripcion_manual: descripcion,
         id_categoria: categoria,
         precio_unitario: monto,
-        cantidad: cantidad || 1,
+        cantidad,
         es_manual: true
     });
 
     renderizar();
 
     const modalEl = document.getElementById('modalVentaRapida');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    modal.hide();
+    bootstrap.Modal.getInstance(modalEl).hide();
 }
 
 async function cargarCategoriasVentaRapida() {
