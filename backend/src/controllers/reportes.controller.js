@@ -46,19 +46,19 @@ const reportesController = {
 
             const [rows] = await db.query(`
                 SELECT 
-                    p.nombre,
+                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
                     c.nombre_categoria AS categoria,
                     pr.nombre AS proveedor,
                     SUM(dv.cantidad) AS cantidad,
                     SUM(dv.subtotal) AS total
                 FROM detalle_ventas dv
-                JOIN productos p ON dv.id_producto = p.id_producto
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
                 LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
                 JOIN ventas v ON dv.id_venta = v.id_venta
                 AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtrosProductos}
-                GROUP BY p.id_producto
+                GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
                 ORDER BY total DESC
             `, paramsProductos);
 
@@ -117,14 +117,14 @@ const reportesController = {
 
             const [rows] = await db.query(`
                 SELECT 
-                    p.nombre,
+                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
                     SUM(dv.cantidad) AS cantidad
                 FROM detalle_ventas dv
-                JOIN productos p ON dv.id_producto = p.id_producto
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 JOIN ventas v ON dv.id_venta = v.id_venta
                 AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtros}
-                GROUP BY p.id_producto
+                GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
                 ORDER BY cantidad DESC
                 LIMIT 10
             `, params);

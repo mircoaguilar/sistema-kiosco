@@ -240,6 +240,19 @@ async function procesarVenta(metodo) {
     }
 }
 
+function agregarVentaRapida(descripcion, monto, cantidad = 1) {
+    carrito.push({
+        id_producto: null,
+        nombre: descripcion,
+        descripcion_manual: descripcion,
+        precio_unitario: parseFloat(monto),
+        cantidad: parseFloat(cantidad),
+        es_manual: true
+    });
+
+    renderizar();
+}
+
 const modalMovimiento = new bootstrap.Modal(document.getElementById('modalMovimiento'));
 
 document.getElementById('btn-registrar-gasto').onclick = () => {

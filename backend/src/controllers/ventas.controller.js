@@ -52,11 +52,38 @@ const ventasController = {
             const id_venta = ventaResult.insertId;
 
             for (const item of items) {
-                await connection.query(
-                    `INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)`,
-                    [id_venta, item.id_producto, item.cantidad, item.precio_unitario, item.cantidad * item.precio_unitario]
-                );
-                await connection.query(`UPDATE productos SET stock = stock - ? WHERE id_producto = ?`, [item.cantidad, item.id_producto]);
+                if (item.es_manual) {
+                    await connection.query(
+                        `INSERT INTO detalle_ventas 
+                        (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal) 
+                        VALUES (?, NULL, ?, 1, ?, ?, ?)`,
+                        [
+                            id_venta,
+                            item.descripcion_manual,
+                            item.cantidad,
+                            item.precio_unitario,
+                            item.cantidad * item.precio_unitario
+                        ]
+                    );
+                } else {
+                    await connection.query(
+                        `INSERT INTO detalle_ventas 
+                        (id_venta, id_producto, cantidad, precio_unitario, subtotal) 
+                        VALUES (?, ?, ?, ?, ?)`,
+                        [
+                            id_venta,
+                            item.id_producto,
+                            item.cantidad,
+                            item.precio_unitario,
+                            item.cantidad * item.precio_unitario
+                        ]
+                    );
+
+                    await connection.query(
+                        `UPDATE productos SET stock = stock - ? WHERE id_producto = ?`,
+                        [item.cantidad, item.id_producto]
+                    );
+                }
             }
 
             await connection.commit();
@@ -77,10 +104,8 @@ const ventasController = {
         }
     },
 
-    // --- FUNCIÓN 2: REIMPRIMIR (Esta es la que te faltaba y causaba el crash) ---
     reimprimirUltimo: async (req, res) => {
         try {
-            // Buscamos la última venta del usuario actual
             const [ventas] = await db.query(
                 `SELECT * FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1`,
                 [req.user.id]
@@ -92,12 +117,13 @@ const ventasController = {
 
             const venta = ventas[0];
 
-            // Buscamos los items de esa venta
             const [items] = await db.query(
-                `SELECT dv.*, p.nombre 
-                 FROM detalle_ventas dv 
-                 JOIN productos p ON dv.id_producto = p.id_producto 
-                 WHERE dv.id_venta = ?`,
+                `SELECT 
+                    dv.*,
+                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre
+                FROM detalle_ventas dv
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                WHERE dv.id_venta = ?`,
                 [venta.id_venta]
             );
 
@@ -191,9 +217,9 @@ const ventasController = {
             const [items] = await db.query(
                 `SELECT 
                     dv.*,
-                    p.nombre
+                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre
                 FROM detalle_ventas dv
-                JOIN productos p ON dv.id_producto = p.id_producto
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 WHERE dv.id_venta = ?`,
                 [id]
             );
@@ -256,12 +282,14 @@ const ventasController = {
             );
 
             for (const item of detalles) {
-                await connection.query(
-                    `UPDATE productos
-                     SET stock = stock + ?
-                     WHERE id_producto = ?`,
-                    [item.cantidad, item.id_producto]
-                );
+                if (item.id_producto) {
+                    await connection.query(
+                        `UPDATE productos
+                        SET stock = stock + ?
+                        WHERE id_producto = ?`,
+                        [item.cantidad, item.id_producto]
+                    );
+                }
             }
 
             await connection.query(

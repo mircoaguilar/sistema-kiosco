@@ -33,7 +33,7 @@ async function imprimirTicket(venta) {
         printer.drawLine();
 
         venta.items.forEach(item => {
-            printer.println(item.nombre.toUpperCase().substring(0, 31));
+            printer.println((item.descripcion_manual || item.nombre).toUpperCase().substring(0, 31));
             
             const cantYPrecio = `${item.cantidad} x $${item.precio_unitario}`;
             const subtotal = `$${(item.cantidad * item.precio_unitario).toFixed(2)}`;
