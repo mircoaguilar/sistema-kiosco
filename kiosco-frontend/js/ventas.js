@@ -185,7 +185,6 @@ async function procesarVenta(metodo) {
     const pagaEfectivo = parseFloat(inputPagaCon.value) || 0;
     const pagaDigital = parseFloat(window.montoDigitalTemporal) || 0;
 
-    // VALIDACIÓN: Evitar ventas sin dinero
     if (metodo === 'efectivo' && pagaEfectivo < totalVenta) {
         return mostrarToast("El efectivo recibido es menor al total", "warning");
     }
@@ -240,18 +239,29 @@ async function procesarVenta(metodo) {
     }
 }
 
-function agregarVentaRapida(descripcion, monto, cantidad = 1, id_categoria = null) {
+function agregarVentaRapida() {
+    const descripcion = document.getElementById("vr-descripcion").value;
+    const categoria = document.getElementById("vr-categoria").value;
+    const monto = parseFloat(document.getElementById("vr-monto").value);
+    const cantidad = parseFloat(document.getElementById("vr-cantidad").value || 1);
+
+    if (!descripcion || !monto || !categoria) {
+        alert("Completa todos los campos");
+        return;
+    }
+
     carrito.push({
         id_producto: null,
         nombre: descripcion,
         descripcion_manual: descripcion,
-        precio_unitario: parseFloat(monto),
-        cantidad: parseFloat(cantidad),
-        es_manual: true,
-        id_categoria: id_categoria
+        id_categoria: categoria,   
+        precio_unitario: monto,
+        cantidad,
+        es_manual: true
     });
 
     renderizar();
+    cerrarModalVentaRapida();
 }
 
 const modalMovimiento = new bootstrap.Modal(document.getElementById('modalMovimiento'));

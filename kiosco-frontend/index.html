@@ -76,6 +76,11 @@
 
                         <div class="d-flex flex-wrap gap-2 mb-4">
                             <button class="btn btn-fav border-primary text-primary" data-bs-toggle="modal" data-bs-target="#modalBusqueda">Buscar por nombre</button>
+                            <button class="btn btn-fav border-success text-success"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalVentaRapida">
+                                Venta rápida
+                            </button>
                         </div>
 
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -308,6 +313,17 @@
             </div>
         </div>
     </div>
+</div>
+
+<div id="modal-venta-rapida">
+    <input id="vr-descripcion" placeholder="Descripción">
+    
+    <select id="vr-categoria"></select>
+
+    <input id="vr-monto" type="number" placeholder="Monto">
+    <input id="vr-cantidad" type="number" value="1">
+
+    <button onclick="agregarVentaRapida()">Agregar</button>
 </div>
 
     <script src="/js/bootstrap.bundle.min.js"></script>
