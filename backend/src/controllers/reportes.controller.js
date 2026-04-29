@@ -47,8 +47,8 @@ const reportesController = {
             const [rows] = await db.query(`
                 SELECT 
                     COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
-                    c.nombre_categoria AS categoria,
-                    pr.nombre AS proveedor,
+                    MAX(c.nombre_categoria) AS categoria,
+                    MAX(pr.nombre) AS proveedor,
                     SUM(dv.cantidad) AS cantidad,
                     SUM(dv.subtotal) AS total
                 FROM detalle_ventas dv
