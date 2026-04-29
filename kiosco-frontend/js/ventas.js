@@ -242,20 +242,23 @@ async function procesarVenta(metodo) {
 function abrirModalVentaRapida() {
     const modalEl = document.getElementById('modalVentaRapida');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modal.show();
 
     document.getElementById("vr-descripcion").value = '';
     document.getElementById("vr-monto").value = '';
     document.getElementById("vr-categoria").value = '';
 
     cargarCategoriasVentaRapida();
+
+    modal.show();
+
+    document.getElementById("vr-descripcion").focus();
 }
 
 function agregarVentaRapida() {
-    const descripcion = document.getElementById("vr-descripcion").value;
+    const descripcion = document.getElementById("vr-descripcion").value.trim();
     const categoria = document.getElementById("vr-categoria").value;
     const monto = parseFloat(document.getElementById("vr-monto").value);
-    
+
     if (!descripcion || !monto || !categoria) {
         alert("Completa todos los campos");
         return;
@@ -267,7 +270,7 @@ function agregarVentaRapida() {
         descripcion_manual: descripcion,
         id_categoria: categoria,
         precio_unitario: monto,
-        cantidad,
+        cantidad: 1,
         es_manual: true
     });
 
@@ -279,37 +282,20 @@ function agregarVentaRapida() {
 
 async function cargarCategoriasVentaRapida() {
     try {
-        console.log("=== INICIANDO CARGA CATEGORÍAS VENTA RÁPIDA ===");
-
-        console.log("API_URL:", API_URL);
-        console.log("Token existe:", !!token);
-
         const res = await fetch(`${API_URL}/categorias`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        console.log("Status respuesta:", res.status);
-        console.log("OK respuesta:", res.ok);
-
         if (!res.ok) {
             throw new Error(`Error HTTP: ${res.status}`);
         }
 
         const categorias = await res.json();
-
-        console.log("Categorías recibidas:", categorias);
-        console.log("Cantidad categorías:", categorias.length);
-
         const select = document.getElementById("vr-categoria");
 
-        console.log("Select encontrado:", select);
-
-        if (!select) {
-            console.error("No existe #vr-categoria en el DOM");
-            return;
-        }
+        if (!select) return;
 
         select.innerHTML = `
             <option value="">Seleccionar categoría</option>
@@ -319,13 +305,8 @@ async function cargarCategoriasVentaRapida() {
             </option>
         `).join('');
 
-        console.log("HTML final select:", select.innerHTML);
-
-        console.log("=== CATEGORÍAS CARGADAS CORRECTAMENTE ===");
-
     } catch (err) {
-        console.error("=== ERROR CARGANDO CATEGORÍAS ===");
-        console.error(err);
+        console.error("Error cargando categorías:", err);
     }
 }
 
