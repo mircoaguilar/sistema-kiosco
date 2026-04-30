@@ -10,10 +10,13 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    timezone: '-03:00', // Hora Argentina
     ssl: {
         rejectUnauthorized: false
     }
+});
+
+pool.on('connection', (connection) => {
+    connection.query("SET time_zone = '-03:00'");
 });
 
 module.exports = pool.promise();
