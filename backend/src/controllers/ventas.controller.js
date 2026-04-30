@@ -329,6 +329,9 @@ const ventasController = {
     },
 
     corregirVenta: async (req, res) => {
+
+        console.log("BODY CORRECCION:", req.body); // ← AGREGAR ACÁ
+
         const { id } = req.params;
         const {
             items,
@@ -509,6 +512,7 @@ const ventasController = {
             });
 
         } catch (error) {
+            console.error("ERROR CORREGIR:", error); 
             await connection.rollback();
 
             res.status(500).json({

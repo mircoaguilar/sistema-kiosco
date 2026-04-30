@@ -474,18 +474,6 @@ document.getElementById('confirmar-anulacion').addEventListener('click', async (
     }
 });
 
-document.getElementById('btn-agregar-producto-corregir').addEventListener('click', () => {
-    productosCorreccion.push({
-        id_producto: null,
-        nombre: '',
-        cantidad: 1,
-        precio_unitario: 0,
-        es_manual: 1
-    });
-
-    renderProductosCorreccion();
-});
-
 document.getElementById('btn-limpiar').addEventListener('click', () => {
     const d = new Date();
     const hoy = d.getFullYear() + '-' +
