@@ -112,7 +112,7 @@ const usuariosController = {
     editarUsuario: async (req, res) => {
         const { id } = req.params;
         const { nombre_completo, usuario, password, rol, estado } = req.body;
-        const id_admin = req.usuario.id_usuario;
+        const id_admin = req.user.id;
 
         try {
             const rolesValidos = ['administrador', 'vendedor'];
@@ -178,7 +178,7 @@ const usuariosController = {
     cambiarEstadoUsuario: async (req, res) => {
         const { id } = req.params;
         const { estado } = req.body;
-        const id_admin = req.usuario.id_usuario;
+        const id_admin = req.user.id;
 
         try {
             await db.query(
