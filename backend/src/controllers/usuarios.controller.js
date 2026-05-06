@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const usuariosController = {
     crearUsuario: async (req, res) => {
         const { nombre_completo, usuario, password, rol } = req.body;
-        const id_admin = req.usuario.id_usuario;
+        const id_admin = req.user.id;
 
         try {
             if (!nombre_completo || !usuario || !password) {
@@ -37,13 +37,13 @@ const usuariosController = {
 
             const [resultado] = await db.query(
                 `INSERT INTO usuarios (nombre_completo, usuario, password, rol)
-                 VALUES (?, ?, ?, ?)`,
+                VALUES (?, ?, ?, ?)`,
                 [nombre_completo, usuario, hashedPassword, rolFinal]
             );
 
             await db.query(
                 `INSERT INTO logs_sistema (id_usuario, accion, descripcion)
-                 VALUES (?, ?, ?)`,
+                VALUES (?, ?, ?)`,
                 [
                     id_admin,
                     'CREAR_USUARIO',
@@ -174,7 +174,7 @@ const usuariosController = {
             });
         }
     },
-    
+
     cambiarEstadoUsuario: async (req, res) => {
         const { id } = req.params;
         const { estado } = req.body;
