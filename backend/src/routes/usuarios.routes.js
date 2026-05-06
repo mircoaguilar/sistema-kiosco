@@ -4,6 +4,7 @@ const router = express.Router();
 const usuariosController = require('../controllers/usuarios.controller');
 const { verificarToken } = require('../middlewares/auth.middleware');
 const { verificarAdministrador } = require('../middlewares/admin.middleware');
+console.log(require('../middlewares/admin.middleware'));
 
 router.post('/', verificarToken, verificarAdministrador, usuariosController.crearUsuario);
 
