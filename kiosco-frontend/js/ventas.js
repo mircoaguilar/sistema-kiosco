@@ -63,11 +63,24 @@ function mostrarToast(mensaje, tipo = "success") {
 
     toastBody.innerText = mensaje;
 
-    toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+    toastEl.classList.remove(
+        'bg-success',
+        'bg-danger',
+        'bg-warning',
+        'text-white'
+    );
 
-    if (tipo === "success") toastEl.classList.add('bg-success');
-    if (tipo === "error") toastEl.classList.add('bg-danger');
-    if (tipo === "warning") toastEl.classList.add('bg-warning');
+    if (tipo === "success") {
+        toastEl.classList.add('bg-success', 'text-white');
+    }
+
+    if (tipo === "danger" || tipo === "error") {
+        toastEl.classList.add('bg-danger', 'text-white');
+    }
+
+    if (tipo === "warning") {
+        toastEl.classList.add('bg-warning', 'text-dark');
+    }
 
     const toast = new bootstrap.Toast(toastEl);
     toast.show();
