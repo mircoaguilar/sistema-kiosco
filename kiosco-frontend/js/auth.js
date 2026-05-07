@@ -43,8 +43,8 @@ formLogin.addEventListener('submit', async (e) => {
         if (response.ok) {
             localStorage.setItem('jwt_token', data.token); 
             localStorage.setItem('id_usuario', data.user.id);
-            
             localStorage.setItem('nombre_usuario', data.user.nombre);
+            localStorage.setItem('rol', data.user.rol);
 
             mostrarAlerta('¡Éxito! Redirigiendo...', 'success');
             
