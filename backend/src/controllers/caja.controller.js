@@ -24,14 +24,12 @@ const cajaController = {
     abrir: async (req, res) => {
         console.log("--- Inicio de proceso abrir caja ---");
         
-        // Debug de entrada
         console.log("Cuerpo de la petición:", req.body);
         console.log("Usuario detectado en token:", req.user);
 
         const { monto_inicial } = req.body;
         const monto = parseFloat(monto_inicial);
         
-        // Validar si req.user existe antes de acceder al ID
         if (!req.user || !req.user.id) {
             console.error("ERROR: No se encontró id_usuario en el request");
             return res.status(401).json({ msg: "Usuario no autenticado" });
@@ -39,7 +37,6 @@ const cajaController = {
 
         const id_usuario = req.user.id;
 
-        // VALIDACIÓN DE SEGURIDAD
         if (isNaN(monto) || monto < 0) {
             console.error("ERROR: Monto inválido recibido:", monto_inicial);
             return res.status(400).json({ msg: "El monto inicial no puede ser negativo" });
@@ -68,7 +65,6 @@ const cajaController = {
             res.json({ message: "Caja abierta", id_sesion: result.insertId });
 
         } catch (error) {
-            // Aquí verás el error de base de datos específico (ej: tabla no existe, columna mal escrita)
             console.error("ERROR CRÍTICO EN BASE DE DATOS:", error);
             res.status(500).json({ 
                 error: "Error interno al abrir la caja", 
@@ -110,7 +106,6 @@ const cajaController = {
             const efeEgresos = parseFloat(movs[0].efe_egresos || 0);
             const efeIngresos = parseFloat(movs[0].efe_ingresos || 0);
 
-            // CÁLCULO DE EFECTIVO ESPERADO (Solo efectivo)
             const montoEsperado = (montoInicial + vEfe + efeIngresos) - efeEgresos;
             const diferencia = parseFloat(monto_final_efectivo) - montoEsperado;
 
@@ -253,9 +248,8 @@ const cajaController = {
                 ventas_efectivo: vEfe,
                 ventas_digital: vDig,
                 ventas_tarjeta: vTar,
-                total_ingresos: totalIngresosTotal, // Envías el total REAL a la card
-                total_egresos: totalEgresosTotal,   // Envías el total REAL a la card
-                // Aquí calculas el esperado solo con los valores de EFECTIVO:
+                total_ingresos: totalIngresosTotal, 
+                total_egresos: totalEgresosTotal,   
                 efectivo_esperado: (montoInicial + vEfe + totalIngresosEfe) - totalEgresosEfe,
                 movimientos
             });

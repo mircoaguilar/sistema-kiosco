@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/bootstrap-icons.min.css">
+
+    <style>
+        .table-responsive {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .sticky-top {
+            top: -1px;
+            z-index: 1020;
+        }
+
+        .offcanvas {
+            width: 350px !important;
+        }
+
+        .nav-link {
+            color: #333;
+            font-weight: 500;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn-acciones {
+            padding: 0.4rem 0.8rem;
+            font-size: 1rem;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .btn-acciones:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Eli Mini Market</span>
+
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3 d-none d-md-inline" id="nombre-vendedor">Cargando...</span>
+
+                <button class="navbar-toggler border-0"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#menuLateral">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuLateral">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title">Panel de Control</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+
+        <div class="offcanvas-body p-0">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="index.html">Punto de Venta</a>
+                <a class="nav-link" href="caja.html">Gestión de Caja</a>
+
+                <div>
+                    <a class="nav-link d-flex justify-content-between align-items-center"
+                       data-bs-toggle="collapse"
+                       href="#menuStock">
+                        Inventario <small>▼</small>
+                    </a>
+
+                    <div class="collapse bg-light" id="menuStock">
+                        <a class="nav-link ps-4 py-2 small" href="productos.html">Lista de Productos</a>
+                        <a class="nav-link ps-4 py-2 small" href="proveedores.html">Proveedores</a>
+                    </div>
+                </div>
+
+                <a class="nav-link d-flex justify-content-between align-items-center"
+                   data-bs-toggle="collapse"
+                   href="#menuReportes">
+                    Reportes <small>▼</small>
+                </a>
+
+                <div class="collapse bg-light" id="menuReportes">
+                    <a class="nav-link ps-4 py-2 small" href="ventas-dia.html">Ventas</a>
+                    <a class="nav-link ps-4 py-2 small" href="top-productos.html">Top Productos</a>
+                    <a class="nav-link ps-4 py-2 small" href="historial-ventas.html">Historial de Ventas</a>
+                </div>
+
+                <a class="nav-link fw-bold text-primary bg-light" href="usuarios.html">
+                    Gestión de Usuarios
+                </a>
+            </nav>
+
+            <div class="mt-auto p-3 border-top">
+                <button class="btn btn-danger w-100" id="btn-logout">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-4">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h4 class="mb-0 fw-bold text-dark">Gestión de Usuarios</h4>
+
+                <button class="btn btn-primary fw-bold px-4" id="btnNuevoUsuario">
+                    <i class="bi bi-person-plus-fill me-2"></i> Nuevo Usuario
+                </button>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row g-2 mb-4">
+
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text"
+                                   id="buscar-usuario"
+                                   class="form-control form-control-lg"
+                                   placeholder="Buscar por nombre o usuario...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <select id="filtro-rol" class="form-select form-select-lg">
+                            <option value="">Todos los roles</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="vendedor">Vendedor</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select id="filtro-estado" class="form-select form-select-lg">
+                            <option value="">Todos</option>
+                            <option value="1">Activos</option>
+                            <option value="0">Inactivos</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="table-responsive border rounded">
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Usuario</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Fecha Creación</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-usuarios-body"></tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalTitulo">Nuevo Usuario</h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <form id="form-usuario">
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="id-usuario">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Nombre Completo</label>
+                            <input type="text"
+                                   id="nombre_completo"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Usuario</label>
+                            <input type="text"
+                                   id="usuario"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Contraseña</label>
+                            <input type="password"
+                                   id="password"
+                                   class="form-control">
+                            <small class="text-muted">
+                                Dejar vacío para mantener contraseña actual (solo edición)
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Rol</label>
+                            <select id="rol" class="form-select" required>
+                                <option value="vendedor">Vendedor</option>
+                                <option value="administrador">Administrador</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="grupoEstado" style="display:none;">
+                            <label class="form-label fw-bold small text-muted">Estado</label>
+                            <select id="estado" class="form-select">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button"
+                                class="btn btn-secondary btn-sm"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4 fw-bold">
+                            Guardar
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirm" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar acción</h5>
+                </div>
+
+                <div class="modal-body" id="modalConfirmMsg">
+                    ¿Estás seguro?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-danger"
+                            id="btnConfirmarAccion">
+                        Confirmar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3"
+         id="toastContainer"></div>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/usuarios.js"></script>
+
+</body>
+</html>

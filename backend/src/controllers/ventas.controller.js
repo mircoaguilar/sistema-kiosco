@@ -129,7 +129,6 @@ const ventasController = {
                 [venta.id_venta]
             );
 
-            // Llamamos al servicio de impresión
             await imprimirTicket({
                 id_venta: venta.id_venta,
                 total_venta: venta.total_venta,
@@ -330,7 +329,7 @@ const ventasController = {
 
     corregirVenta: async (req, res) => {
 
-        console.log("BODY CORRECCION:", req.body); // ← AGREGAR ACÁ
+        console.log("BODY CORRECCION:", req.body); 
 
         const { id } = req.params;
         const {

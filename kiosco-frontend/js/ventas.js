@@ -98,14 +98,12 @@ let productoPendiente = null;
 
 function agregarAlCarrito(p) {
     if (p.es_pesable) {
-        // Guardamos el producto y abrimos el modal en lugar del prompt
         productoPendiente = p;
         document.getElementById('label-producto-pesable').innerText = `¿Cuántos kg de ${p.nombre}?`;
         document.getElementById('input-peso-modal').value = '';
         new bootstrap.Modal(document.getElementById('modalPeso')).show();
         setTimeout(() => document.getElementById('input-peso-modal').focus(), 500);
     } else {
-        // Lógica normal
         const i = carrito.findIndex(item => item.id_producto === p.id_producto);
         if (i !== -1) carrito[i].cantidad += 1;
         else carrito.push({
@@ -126,10 +124,8 @@ function renderizar() {
         const sub = item.precio_unitario * item.cantidad;
         total += sub;
 
-        // Determinamos la etiqueta: Si es pesable, usamos 'kg', sino 'unid.'
         const unidadMedida = item.es_pesable ? "kg" : "";
         
-        // Formato: si es pesable mostramos 3 decimales, sino 0 decimales (para unidades)
         const displayCantidad = item.es_pesable ? item.cantidad.toFixed(3) : item.cantidad;
 
         tablaCarrito.innerHTML += `

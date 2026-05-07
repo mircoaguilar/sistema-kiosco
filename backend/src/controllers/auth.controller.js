@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const bcrypt = require('bcrypt'); // Lo comentamos por ahora
+const bcrypt = require('bcrypt'); 
 const jwt = require('jsonwebtoken');
 
 const authController = {

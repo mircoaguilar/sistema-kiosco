@@ -131,7 +131,6 @@ const productosController = {
         const { nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo, es_pesable } = req.body;
 
         try {
-            // Validar proveedor si viene
             if (id_proveedor) {
                 const [prov] = await db.query(
                     'SELECT id_proveedor FROM proveedores WHERE id_proveedor = ? AND activo = 1',

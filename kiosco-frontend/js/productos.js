@@ -72,7 +72,6 @@ function confirmar(mensaje) {
     });
 }
 
-// --- GESTIÓN DE CATEGORÍAS ---
 
 async function cargarCategorias() {
     try {
@@ -117,8 +116,6 @@ async function cargarProveedores() {
         console.error("Error proveedores", error);
     }
 }
-
-// --- GESTIÓN DE PRODUCTOS ---
 
 async function cargarProductos() {
     try {
@@ -346,7 +343,6 @@ document.getElementById('btnNuevoProd').onclick = async () => {
 const modalPrecios = new bootstrap.Modal(document.getElementById('modalPrecios'));
 
 document.getElementById('btnSubaMasiva').onclick = async () => {
-    // cargar selects
     document.getElementById('filtro-cat-precio').innerHTML =
         '<option value="">Todas</option>' +
         categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
