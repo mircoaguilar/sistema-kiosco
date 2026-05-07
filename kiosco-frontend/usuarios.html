@@ -15,6 +15,11 @@
         }
 
         if (rol !== 'administrador') {
+            localStorage.setItem(
+                'toast_error',
+                'Acceso denegado. No tienes permisos para ingresar a esta sección.'
+            );
+
             window.location.href = 'index.html';
         }
     </script>

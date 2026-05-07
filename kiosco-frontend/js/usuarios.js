@@ -18,6 +18,17 @@ if (rolUsuario !== 'administrador') {
 
 document.getElementById('nombre-vendedor').innerText = `Administrador: ${nombreUsuario}`;
 
+document.addEventListener('DOMContentLoaded', () => {
+    aplicarPermisosMenu();
+
+    const errorPermiso = localStorage.getItem('toast_error');
+
+    if (errorPermiso) {
+        mostrarToast(errorPermiso, 'danger');
+        localStorage.removeItem('toast_error');
+    }
+});
+
 const tablaUsuarios = document.getElementById('tabla-usuarios-body');
 
 let usuariosCache = [];
