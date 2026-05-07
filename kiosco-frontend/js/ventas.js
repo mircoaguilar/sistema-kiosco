@@ -13,12 +13,13 @@ const rolUsuario = localStorage.getItem('rol');
 function aplicarPermisosMenu() {
     if (rolUsuario !== 'administrador') {
         document.getElementById('menu-usuarios')?.remove();
-
         document.getElementById('menu-inventario')?.remove();
-
         document.getElementById('menu-reportes-admin')?.remove();
 
-        document.getElementById('menu-historial-vendedor')?.style.display = 'block';
+        const historial = document.getElementById('menu-historial-vendedor');
+        if (historial) {
+            historial.style.display = 'block';
+        }
     }
 }
 
