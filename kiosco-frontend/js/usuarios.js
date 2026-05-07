@@ -8,6 +8,9 @@ const API_URL = window.APP_CONFIG.API_URL;
 const token = localStorage.getItem('jwt_token');
 const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Administrador';
 const rolUsuario = localStorage.getItem('rol');
+if (rolUsuario !== 'administrador') {
+    document.getElementById('menu-usuarios')?.remove();
+}
 
 if (rolUsuario !== 'administrador') {
     window.location.href = 'index.html';
