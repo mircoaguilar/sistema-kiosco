@@ -7,8 +7,27 @@
 const API_URL = window.APP_CONFIG.API_URL;
 const token = localStorage.getItem('jwt_token');
 const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Usuario';
+const rolUsuario = localStorage.getItem('rol');
 
-document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
+function aplicarPermisosMenu() {
+    if (rolUsuario !== 'administrador') {
+        document.getElementById('menu-usuarios')?.remove();
+        document.getElementById('menu-inventario')?.remove();
+        document.getElementById('menu-reportes-admin')?.remove();
+
+        const historial = document.getElementById('menu-historial-vendedor');
+        if (historial) {
+            historial.style.display = 'block';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    aplicarPermisosMenu();
+});
+
+document.getElementById('nombre-vendedor').innerText =
+    `${rolUsuario === 'administrador' ? 'Administrador' : 'Vendedor'}: ${nombreUsuario}`;
 
 const tabla = document.getElementById('tabla-historial');
 
