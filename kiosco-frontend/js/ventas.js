@@ -25,6 +25,17 @@ function aplicarPermisosMenu() {
 
 aplicarPermisosMenu();
 
+document.addEventListener('DOMContentLoaded', () => {
+    aplicarPermisosMenu();
+
+    const errorPermiso = localStorage.getItem('toast_error');
+
+    if (errorPermiso) {
+        mostrarToast(errorPermiso, 'danger');
+        localStorage.removeItem('toast_error');
+    }
+});
+
 let carrito = [];
 let todosLosProductos = [];
 window.montoDigitalTemporal = 0;
