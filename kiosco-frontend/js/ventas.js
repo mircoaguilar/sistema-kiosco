@@ -1,11 +1,24 @@
 (function verificarSesion() {
-    if (!localStorage.getItem('jwt_token')) window.location.href = 'login.html';
+    if (!localStorage.getItem('jwt_token')) {
+        window.location.href = 'login.html';
+    }
 })();
 
 const API_URL = window.APP_CONFIG.API_URL;
 const token = localStorage.getItem('jwt_token');
 const idUsuario = localStorage.getItem('id_usuario');
 const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Cajero';
+const rolUsuario = localStorage.getItem('rol');
+
+function aplicarPermisosMenu() {
+    if (rolUsuario !== 'administrador') {
+        document.getElementById('menu-usuarios')?.remove();
+        document.getElementById('menu-proveedores')?.remove();
+        document.getElementById('menu-reportes')?.remove();
+    }
+}
+
+aplicarPermisosMenu();
 
 let carrito = [];
 let todosLosProductos = [];
