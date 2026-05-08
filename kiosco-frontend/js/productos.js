@@ -151,6 +151,9 @@ function renderizarTabla(lista) {
                 <small class="text-muted d-block mt-1" style="font-size: 0.65rem">Mín: ${parseFloat(p.stock_minimo)}</small>
             </td>
             <td class="text-center">
+                ${p.fecha_vencimiento || '-'}
+            </td>
+            <td class="text-center">
                 <div class="btn-group shadow-sm border rounded overflow-hidden">
                     <button class="btn btn-acciones text-primary border-end" onclick="prepararEdicion(${p.id_producto})" title="Editar">
                         <i class="bi bi-pencil-fill"></i>
@@ -182,7 +185,8 @@ formProd.addEventListener('submit', async (e) => {
         precio_venta: parseFloat(document.getElementById('precio_venta').value),
         stock: parseFloat(document.getElementById('stock').value), 
         stock_minimo: parseInt(document.getElementById('stock_minimo').value),
-        es_pesable: document.getElementById('es_pesable').checked ? 1 : 0 
+        es_pesable: document.getElementById('es_pesable').checked ? 1 : 0,
+        fecha_vencimiento: document.getElementById('fecha_vencimiento').value || null
     };
 
     const url = editandoID ? `${API_URL}/productos/${editandoID}` : `${API_URL}/productos`;
@@ -209,6 +213,7 @@ formProd.addEventListener('submit', async (e) => {
             document.getElementById('nombre').value = '';
             document.getElementById('precio_venta').value = '';
             document.getElementById('stock').value = '';
+            document.getElementById('fecha_vencimiento').value = '';
             document.getElementById('codigo').focus();
         } else {
             bootstrapModalProd.hide();
@@ -237,7 +242,8 @@ window.prepararEdicion = async (id) => {
     document.getElementById('precio_venta').value = p.precio_venta;
     document.getElementById('stock').value = p.stock;
     document.getElementById('stock_minimo').value = p.stock_minimo;
-    document.getElementById('es_pesable').checked = (p.es_pesable === 1); 
+    document.getElementById('es_pesable').checked = (p.es_pesable === 1);
+    document.getElementById('fecha_vencimiento').value = p.fecha_vencimiento || '';
     
     bootstrapModalProd.show();
 };
@@ -302,6 +308,7 @@ function limpiarFormulario() {
     document.getElementById('modalTitulo').innerText = "Nuevo Producto";
     document.getElementById('stock_minimo').value = "5";
     document.getElementById('es_pesable').checked = false; 
+    document.getElementById('fecha_vencimiento').value = '';
 }
 
 function aplicarFiltros() {
