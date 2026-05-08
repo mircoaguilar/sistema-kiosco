@@ -6,6 +6,24 @@
     <title>Inventario</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/bootstrap-icons.min.css">
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        const rol = localStorage.getItem('rol');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        if (rol !== 'administrador') {
+            localStorage.setItem(
+                'toast_error',
+                'Acceso denegado. No tienes permisos para ingresar a esta sección.'
+            );
+
+            window.location.href = 'index.html';
+        }
+    </script>
+    
     <style>
         .table-responsive { max-height: 70vh; overflow-y: auto; }
         .sticky-top { top: -1px; z-index: 1020; }
