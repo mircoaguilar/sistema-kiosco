@@ -18,7 +18,8 @@ const productosController = {
         try {
             const [rows] = await db.query(`
                 SELECT 
-                    p.*, 
+                    p.*,
+                    DATE_FORMAT(p.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
                     c.nombre_categoria,
                     pr.nombre AS nombre_proveedor
                 FROM productos p 
@@ -44,7 +45,8 @@ const productosController = {
         try {
             const [rows] = await db.query(`
                 SELECT 
-                    p.*, 
+                    p.*,
+                    DATE_FORMAT(p.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
                     c.nombre_categoria,
                     pr.nombre AS nombre_proveedor
                 FROM productos p
@@ -70,67 +72,28 @@ const productosController = {
     },
 
     crear: async (req, res) => {
-    let { 
-        codigo_barras, nombre, id_categoria, id_proveedor, 
-        precio_costo, precio_venta, stock, stock_minimo, es_pesable 
-    } = req.body;
-
-    try {
-        codigo_barras = codigo_barras?.trim();
-        if (!codigo_barras) {
-            codigo_barras = null;
-        }
-
-        if (id_proveedor) {
-            const [prov] = await db.query(
-                'SELECT id_proveedor FROM proveedores WHERE id_proveedor = ? AND activo = 1',
-                [id_proveedor]
-            );
-
-            if (prov.length === 0) {
-                return res.status(400).json({ 
-                    error: "Proveedor inválido" 
-                });
-            }
-        }
-
-        const sql = `
-            INSERT INTO productos 
-            (codigo_barras, nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo, es_pesable) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const [result] = await db.query(sql, [
+        let {
             codigo_barras,
             nombre,
             id_categoria,
-            id_proveedor || null,
+            id_proveedor,
             precio_costo,
             precio_venta,
             stock,
             stock_minimo,
-            es_pesable
-        ]);
-
-        res.json({ 
-            message: "Producto creado con éxito", 
-            id: result.insertId 
-        });
-
-    } catch (error) {
-        res.status(500).json({ 
-            error: "Error al crear producto", 
-            details: error.message 
-        });
-    }
-},
-
-    actualizar: async (req, res) => {
-        const { id } = req.params;
-
-        const { nombre, id_categoria, id_proveedor, precio_costo, precio_venta, stock, stock_minimo, es_pesable } = req.body;
+            es_pesable,
+            fecha_vencimiento
+        } = req.body;
 
         try {
+            codigo_barras = codigo_barras?.trim();
+
+            if (!codigo_barras) {
+                codigo_barras = null;
+            }
+
+            fecha_vencimiento = fecha_vencimiento || null;
+
             if (id_proveedor) {
                 const [prov] = await db.query(
                     'SELECT id_proveedor FROM proveedores WHERE id_proveedor = ? AND activo = 1',
@@ -138,32 +101,121 @@ const productosController = {
                 );
 
                 if (prov.length === 0) {
-                    return res.status(400).json({ 
-                        error: "Proveedor inválido" 
+                    return res.status(400).json({
+                        error: "Proveedor inválido"
                     });
                 }
             }
 
             const sql = `
-                UPDATE productos 
-                SET nombre = ?, id_categoria = ?, id_proveedor = ?, precio_costo = ?, 
-                    precio_venta = ?, stock = ?, stock_minimo = ?, es_pesable = ?
+                INSERT INTO productos
+                (
+                    codigo_barras,
+                    nombre,
+                    id_categoria,
+                    id_proveedor,
+                    precio_costo,
+                    precio_venta,
+                    stock,
+                    stock_minimo,
+                    es_pesable,
+                    fecha_vencimiento
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const [result] = await db.query(sql, [
+                codigo_barras,
+                nombre,
+                id_categoria,
+                id_proveedor || null,
+                precio_costo,
+                precio_venta,
+                stock,
+                stock_minimo,
+                es_pesable,
+                fecha_vencimiento
+            ]);
+
+            res.json({
+                message: "Producto creado con éxito",
+                id: result.insertId
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                error: "Error al crear producto",
+                details: error.message
+            });
+        }
+    },
+
+    actualizar: async (req, res) => {
+        const { id } = req.params;
+
+        let {
+            nombre,
+            id_categoria,
+            id_proveedor,
+            precio_costo,
+            precio_venta,
+            stock,
+            stock_minimo,
+            es_pesable,
+            fecha_vencimiento
+        } = req.body;
+
+        try {
+            fecha_vencimiento = fecha_vencimiento || null;
+
+            if (id_proveedor) {
+                const [prov] = await db.query(
+                    'SELECT id_proveedor FROM proveedores WHERE id_proveedor = ? AND activo = 1',
+                    [id_proveedor]
+                );
+
+                if (prov.length === 0) {
+                    return res.status(400).json({
+                        error: "Proveedor inválido"
+                    });
+                }
+            }
+
+            const sql = `
+                UPDATE productos
+                SET nombre = ?,
+                    id_categoria = ?,
+                    id_proveedor = ?,
+                    precio_costo = ?,
+                    precio_venta = ?,
+                    stock = ?,
+                    stock_minimo = ?,
+                    es_pesable = ?,
+                    fecha_vencimiento = ?
                 WHERE id_producto = ?
             `;
 
             await db.query(sql, [
-                nombre, id_categoria, id_proveedor || null, precio_costo, 
-                precio_venta, stock, stock_minimo, es_pesable, id
+                nombre,
+                id_categoria,
+                id_proveedor || null,
+                precio_costo,
+                precio_venta,
+                stock,
+                stock_minimo,
+                es_pesable,
+                fecha_vencimiento,
+                id
             ]);
 
-            res.json({ 
-                message: "Producto actualizado correctamente" 
+            res.json({
+                message: "Producto actualizado correctamente"
             });
 
         } catch (error) {
-            res.status(500).json({ 
-                error: "Error al actualizar", 
-                details: error.message 
+            res.status(500).json({
+                error: "Error al actualizar",
+                details: error.message
             });
         }
     },
