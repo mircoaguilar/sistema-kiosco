@@ -6,10 +6,10 @@
     <title>Ventas del Día</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <script>
-        const token = localStorage.getItem('jwt_token');
+        const authToken = localStorage.getItem('jwt_token');
         const rol = localStorage.getItem('rol');
 
-        if (!token) {
+        if (!authToken) {
             window.location.href = 'login.html';
         }
 

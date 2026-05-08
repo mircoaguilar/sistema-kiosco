@@ -7,10 +7,10 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/bootstrap-icons.min.css">
     <script>
-        const token = localStorage.getItem('jwt_token');
+        const authToken = localStorage.getItem('jwt_token');
         const rol = localStorage.getItem('rol');
 
-        if (!token) {
+        if (!authToken) {
             window.location.href = 'login.html';
         }
 
