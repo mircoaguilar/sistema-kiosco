@@ -294,6 +294,8 @@ async function abrirModalCorregir(idVenta) {
         document.getElementById('correccion-monto-tarjeta').value = data.venta.monto_tarjeta || 0;
         document.getElementById('correccion-tipo-tarjeta').value = data.venta.tipo_tarjeta || '';
 
+        actualizarCamposMetodoPago();
+
         renderProductosCorreccion();
 
         const modal = new bootstrap.Modal(document.getElementById('modalCorregirVenta'));
@@ -302,6 +304,40 @@ async function abrirModalCorregir(idVenta) {
     } catch (error) {
         console.error(error);
         mostrarToast('Error al cargar productos para corrección', 'danger');
+    }
+}
+
+function actualizarCamposMetodoPago() {
+    const metodo = document.getElementById('correccion-metodo-pago').value;
+
+    const grupoEfectivo = document.getElementById('grupo-efectivo');
+    const grupoTransferencia = document.getElementById('grupo-transferencia');
+    const grupoTarjeta = document.getElementById('grupo-tarjeta');
+    const grupoTipoTarjeta = document.getElementById('grupo-tipo-tarjeta');
+
+    grupoEfectivo.style.display = 'none';
+    grupoTransferencia.style.display = 'none';
+    grupoTarjeta.style.display = 'none';
+    grupoTipoTarjeta.style.display = 'none';
+
+    if (metodo === 'efectivo') {
+        grupoEfectivo.style.display = 'block';
+    }
+
+    if (metodo === 'transferencia') {
+        grupoTransferencia.style.display = 'block';
+    }
+
+    if (metodo === 'tarjeta') {
+        grupoTarjeta.style.display = 'block';
+        grupoTipoTarjeta.style.display = 'block';
+    }
+
+    if (metodo === 'mixto') {
+        grupoEfectivo.style.display = 'block';
+        grupoTransferencia.style.display = 'block';
+        grupoTarjeta.style.display = 'block';
+        grupoTipoTarjeta.style.display = 'block';
     }
 }
 
@@ -396,6 +432,9 @@ function eliminarProductoCorreccion(index) {
     renderProductosCorreccion();
 }
 
+document.getElementById('correccion-metodo-pago')
+    .addEventListener('change', actualizarCamposMetodoPago);
+
 document.getElementById('confirmar-correccion').addEventListener('click', async () => {
     const motivo = document.getElementById('motivo-correccion').value.trim();
 
@@ -423,6 +462,50 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
         const monto_transferencia = parseFloat(document.getElementById('correccion-monto-transferencia').value) || 0;
         const monto_tarjeta = parseFloat(document.getElementById('correccion-monto-tarjeta').value) || 0;
         const tipo_tarjeta = document.getElementById('correccion-tipo-tarjeta').value || null;
+        const totalPagos = monto_efectivo + monto_transferencia + monto_tarjeta;
+
+        const totalVenta = productosCorreccion.reduce(
+            (acc, item) => acc + (item.cantidad * item.precio_unitario),
+            0
+        );
+
+        if (Math.abs(totalPagos - totalVenta) > 1) {
+            mostrarToast('Los montos no coinciden con el total corregido', 'warning');
+            return;
+        }
+
+        if (metodo_pago === 'efectivo') {
+            if (monto_efectivo <= 0 || monto_transferencia > 0 || monto_tarjeta > 0) {
+                mostrarToast('Solo debe cargar monto en efectivo', 'warning');
+                return;
+            }
+        }
+
+        if (metodo_pago === 'transferencia') {
+            if (monto_transferencia <= 0 || monto_efectivo > 0 || monto_tarjeta > 0) {
+                mostrarToast('Solo debe cargar monto en transferencia', 'warning');
+                return;
+            }
+        }
+
+        if (metodo_pago === 'tarjeta') {
+            if (monto_tarjeta <= 0 || monto_efectivo > 0 || monto_transferencia > 0) {
+                mostrarToast('Solo debe cargar monto en tarjeta', 'warning');
+                return;
+            }
+
+            if (!tipo_tarjeta) {
+                mostrarToast('Seleccione tipo de tarjeta', 'warning');
+                return;
+            }
+        }
+
+        if (metodo_pago === 'mixto') {
+            if (totalPagos <= 0) {
+                mostrarToast('Debe ingresar montos válidos', 'warning');
+                return;
+            }
+        }
         const items = productosCorreccion.map(item => ({
                             id_producto: item.id_producto,
                             cantidad: item.cantidad,
