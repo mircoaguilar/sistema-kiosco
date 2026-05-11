@@ -60,8 +60,8 @@ async function cargarReporte() {
         if (proveedor) params.push(`proveedor=${proveedor}`);
         if (desde) params.push(`desde=${desde}`);
         if (hasta) params.push(`hasta=${hasta}`);
-        if (horaDesde) params.push(`hora_desde=${encodeURIComponent(horaDesde)}`);
-        if (horaHasta) params.push(`hora_hasta=${encodeURIComponent(horaHasta)}`);
+        if (horaDesde) params.push(`hora_desde=${horaDesde}`);
+        if (horaHasta) params.push(`hora_hasta=${horaHasta}`);
 
         if (params.length > 0) {
             url += '?' + params.join('&');
@@ -148,12 +148,6 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('filtro-categoria')?.addEventListener('change', cargarReporte);
-    document.getElementById('filtro-proveedor')?.addEventListener('change', cargarReporte);
-    document.getElementById('filtro-desde')?.addEventListener('change', cargarReporte);
-    document.getElementById('filtro-hasta')?.addEventListener('change', cargarReporte);
-    document.getElementById('filtro-hora-desde')?.addEventListener('change', cargarReporte);
-    document.getElementById('filtro-hora-hasta')?.addEventListener('change', cargarReporte);
 
     const d = new Date();
     const hoy = d.getFullYear() + '-' +
@@ -163,51 +157,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
 
-    new tempusDominus.TempusDominus(
-        document.getElementById('contenedor-hora-desde'),
-        {
-            display: {
-                components: {
-                    calendar: false,
-                    date: false,
-                    month: false,
-                    year: false,
-                    decades: false,
-                    clock: true,
-                    hours: true,
-                    minutes: true,
-                    seconds: false
-                }
-            },
-            localization: {
-                locale: 'es-AR',
-                format: 'HH:mm'
-            }
-        }
-    );
+    const horaDesde = flatpickr("#filtro-hora-desde", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        onChange: cargarReporte
+    });
 
-    new tempusDominus.TempusDominus(
-        document.getElementById('contenedor-hora-hasta'),
-        {
-            display: {
-                components: {
-                    calendar: false,
-                    date: false,
-                    month: false,
-                    year: false,
-                    decades: false,
-                    clock: true,
-                    hours: true,
-                    minutes: true,
-                    seconds: false
-                }
-            },
-            localization: {
-                locale: 'es-AR',
-                format: 'HH:mm'
-            }
-        }
-    );
+    const horaHasta = flatpickr("#filtro-hora-hasta", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        onChange: cargarReporte
+    });
+
+    document.getElementById('filtro-categoria').addEventListener('change', cargarReporte);
+    document.getElementById('filtro-proveedor').addEventListener('change', cargarReporte);
+    document.getElementById('filtro-desde').addEventListener('change', cargarReporte);
+    document.getElementById('filtro-hasta').addEventListener('change', cargarReporte);
 
     await cargarFiltros();
     await cargarReporte();

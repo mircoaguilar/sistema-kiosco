@@ -13,40 +13,60 @@ const reportesController = {
                 hora_hasta
             } = req.query;
 
-            let filtrosProductos = `WHERE 1=1`;
+            let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
             let paramsProductos = [];
 
-            if (desde && hasta) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
-                paramsProductos.push(desde, hasta);
-            } else if (desde) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) >= ?`;
-                paramsProductos.push(desde);
-            } else if (hasta) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) <= ?`;
-                paramsProductos.push(hasta);
+            let filtrosCantidad = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+            let paramsCantidad = [];
+
+            let fechaInicio = null;
+            let fechaFin = null;
+
+            if (desde) {
+                fechaInicio = `${desde} ${hora_desde || '00:00:00'}`;
+            }
+
+            if (hasta) {
+                fechaFin = `${hasta} ${hora_hasta || '23:59:59'}`;
+            }
+
+            if (fechaInicio && fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora BETWEEN ? AND ?`;
+                filtrosCantidad += ` AND v.fecha_hora BETWEEN ? AND ?`;
+                paramsProductos.push(fechaInicio, fechaFin);
+                paramsCantidad.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosProductos += ` AND v.fecha_hora >= ?`;
+                filtrosCantidad += ` AND v.fecha_hora >= ?`;
+                paramsProductos.push(fechaInicio);
+                paramsCantidad.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora <= ?`;
+                filtrosCantidad += ` AND v.fecha_hora <= ?`;
+                paramsProductos.push(fechaFin);
+                paramsCantidad.push(fechaFin);
+
             } else {
                 filtrosProductos += ` AND DATE(v.fecha_hora) = CURDATE()`;
-            }
-
-            if (hora_desde) {
-                filtrosProductos += ` AND TIME(v.fecha_hora) >= ?`;
-                paramsProductos.push(hora_desde);
-            }
-
-            if (hora_hasta) {
-                filtrosProductos += ` AND TIME(v.fecha_hora) <= ?`;
-                paramsProductos.push(hora_hasta);
+                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURDATE()`;
             }
 
             if (categoria) {
                 filtrosProductos += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
+                filtrosCantidad += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
                 paramsProductos.push(categoria, categoria);
+                paramsCantidad.push(categoria, categoria);
             }
 
             if (proveedor) {
                 filtrosProductos += ` AND p.id_proveedor = ?`;
+                filtrosCantidad += ` AND p.id_proveedor = ?`;
                 paramsProductos.push(proveedor);
+                paramsCantidad.push(proveedor);
             }
 
             const [rows] = await db.query(`
@@ -64,7 +84,6 @@ const reportesController = {
                     ON p.id_proveedor = pr.id_proveedor
                 JOIN ventas v 
                     ON dv.id_venta = v.id_venta
-                    AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtrosProductos}
                 GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
                 ORDER BY total DESC
@@ -73,44 +92,6 @@ const reportesController = {
             const totalGeneral = rows.reduce((acc, item) => {
                 return acc + parseFloat(item.total);
             }, 0);
-
-            let filtrosCantidad = `
-                WHERE COALESCE(v.estado, 'activa') = 'activa'
-            `;
-            let paramsCantidad = [];
-
-            if (desde && hasta) {
-                filtrosCantidad += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
-                paramsCantidad.push(desde, hasta);
-            } else if (desde) {
-                filtrosCantidad += ` AND DATE(v.fecha_hora) >= ?`;
-                paramsCantidad.push(desde);
-            } else if (hasta) {
-                filtrosCantidad += ` AND DATE(v.fecha_hora) <= ?`;
-                paramsCantidad.push(hasta);
-            } else {
-                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURDATE()`;
-            }
-
-            if (hora_desde) {
-                filtrosCantidad += ` AND TIME(v.fecha_hora) >= ?`;
-                paramsCantidad.push(hora_desde);
-            }
-
-            if (hora_hasta) {
-                filtrosCantidad += ` AND TIME(v.fecha_hora) <= ?`;
-                paramsCantidad.push(hora_hasta);
-            }
-
-            if (categoria) {
-                filtrosCantidad += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
-                paramsCantidad.push(categoria, categoria);
-            }
-
-            if (proveedor) {
-                filtrosCantidad += ` AND p.id_proveedor = ?`;
-                paramsCantidad.push(proveedor);
-            }
 
             const [ventasCount] = await db.query(`
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
