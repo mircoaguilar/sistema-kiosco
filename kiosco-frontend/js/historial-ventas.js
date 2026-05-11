@@ -288,6 +288,12 @@ async function abrirModalCorregir(idVenta) {
             es_manual: item.es_manual || 0
         }));
 
+        document.getElementById('correccion-metodo-pago').value = data.venta.metodo_pago || 'efectivo';
+        document.getElementById('correccion-monto-efectivo').value = data.venta.monto_efectivo || 0;
+        document.getElementById('correccion-monto-transferencia').value = data.venta.monto_transferencia || 0;
+        document.getElementById('correccion-monto-tarjeta').value = data.venta.monto_tarjeta || 0;
+        document.getElementById('correccion-tipo-tarjeta').value = data.venta.tipo_tarjeta || '';
+
         renderProductosCorreccion();
 
         const modal = new bootstrap.Modal(document.getElementById('modalCorregirVenta'));
@@ -412,6 +418,11 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
         }
 
         const venta = detalleData.venta;
+        const metodo_pago = document.getElementById('correccion-metodo-pago').value;
+        const monto_efectivo = parseFloat(document.getElementById('correccion-monto-efectivo').value) || 0;
+        const monto_transferencia = parseFloat(document.getElementById('correccion-monto-transferencia').value) || 0;
+        const monto_tarjeta = parseFloat(document.getElementById('correccion-monto-tarjeta').value) || 0;
+        const tipo_tarjeta = document.getElementById('correccion-tipo-tarjeta').value || null;
         const items = productosCorreccion.map(item => ({
                             id_producto: item.id_producto,
                             cantidad: item.cantidad,
@@ -422,11 +433,11 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
 
         const payload = {
             motivo,
-            metodo_pago: venta.metodo_pago,
-            monto_efectivo: venta.monto_efectivo,
-            monto_transferencia: venta.monto_transferencia,
-            monto_tarjeta: venta.monto_tarjeta,
-            tipo_tarjeta: venta.tipo_tarjeta,
+            metodo_pago,
+            monto_efectivo,
+            monto_transferencia,
+            monto_tarjeta,
+            tipo_tarjeta,
             items
         };
 
