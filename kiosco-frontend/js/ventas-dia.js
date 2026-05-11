@@ -142,19 +142,19 @@ document.getElementById('btn-limpiar').addEventListener('click', () => {
     cargarReporte();
 });
 
-document.getElementById('filtro-categoria').addEventListener('change', cargarReporte);
-document.getElementById('filtro-proveedor').addEventListener('change', cargarReporte);
-document.getElementById('filtro-desde').addEventListener('change', cargarReporte);
-document.getElementById('filtro-hasta').addEventListener('change', cargarReporte);
-document.getElementById('filtro-hora-desde').addEventListener('change', cargarReporte);
-document.getElementById('filtro-hora-hasta').addEventListener('change', cargarReporte);
-
 document.getElementById('btn-logout').addEventListener('click', () => {
     localStorage.clear();
     window.location.href = 'login.html';
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('filtro-categoria')?.addEventListener('change', cargarReporte);
+    document.getElementById('filtro-proveedor')?.addEventListener('change', cargarReporte);
+    document.getElementById('filtro-desde')?.addEventListener('change', cargarReporte);
+    document.getElementById('filtro-hasta')?.addEventListener('change', cargarReporte);
+    document.getElementById('filtro-hora-desde')?.addEventListener('change', cargarReporte);
+    document.getElementById('filtro-hora-hasta')?.addEventListener('change', cargarReporte);
+
     const d = new Date();
     const hoy = d.getFullYear() + '-' +
         String(d.getMonth() + 1).padStart(2, '0') + '-' +
