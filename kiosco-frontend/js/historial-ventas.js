@@ -356,10 +356,6 @@ function actualizarCamposMetodoPago() {
         grupoTipoTarjeta.style.display = 'block';
     }
 
-    console.log("Método seleccionado:", metodo);
-    console.log("Efectivo:", inputEfectivo.value);
-    console.log("Transferencia:", inputTransferencia.value);
-    console.log("Tarjeta:", inputTarjeta.value);
 }
 
 function renderProductosCorreccion() {
@@ -493,16 +489,6 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
         if (metodo_pago === 'tarjeta') {
             totalVenta += totalVenta * 0.08;
         }
-
-        console.log("TOTAL VENTA:", totalVenta);
-        console.log("TOTAL PAGOS:", totalPagos);
-        console.log({
-            metodo_pago,
-            monto_efectivo,
-            monto_transferencia,
-            monto_tarjeta,
-            tipo_tarjeta
-        });
 
         if (Math.abs(totalPagos - totalVenta) > 1) {
             mostrarToast('Los montos no coinciden con el total corregido', 'warning');
