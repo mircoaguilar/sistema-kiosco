@@ -644,5 +644,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function formatearFecha(fecha) {
-    return new Date(fecha).toLocaleString('es-AR');
+    if (!fecha) return '';
+
+    const [fechaParte, horaParte] = fecha.split(' ');
+
+    const [anio, mes, dia] = fechaParte.split('-');
+
+    return `${dia}/${mes}/${anio}, ${horaParte}`;
 }
