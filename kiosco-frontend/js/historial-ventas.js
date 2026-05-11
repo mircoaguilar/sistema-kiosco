@@ -646,15 +646,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 function formatearFecha(fecha) {
     if (!fecha) return '';
 
-    const f = new Date(fecha);
+    const limpia = fecha.replace('T', ' ').replace('.000Z', '');
 
-    const dia = String(f.getDate()).padStart(2, '0');
-    const mes = String(f.getMonth() + 1).padStart(2, '0');
-    const anio = f.getFullYear();
+    const [fechaParte, horaParte] = limpia.split(' ');
+    const [anio, mes, dia] = fechaParte.split('-');
 
-    const horas = String(f.getHours()).padStart(2, '0');
-    const minutos = String(f.getMinutes()).padStart(2, '0');
-    const segundos = String(f.getSeconds()).padStart(2, '0');
-
-    return `${dia}/${mes}/${anio}, ${horas}:${minutos}:${segundos}`;
+    return `${dia}/${mes}/${anio}, ${horaParte}`;
 }
