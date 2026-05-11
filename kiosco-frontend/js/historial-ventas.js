@@ -464,10 +464,14 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
         const tipo_tarjeta = document.getElementById('correccion-tipo-tarjeta').value || null;
         const totalPagos = monto_efectivo + monto_transferencia + monto_tarjeta;
 
-        const totalVenta = productosCorreccion.reduce(
+        let totalVenta = productosCorreccion.reduce(
             (acc, item) => acc + (item.cantidad * item.precio_unitario),
             0
         );
+
+        if (metodo_pago === 'tarjeta') {
+            totalVenta += totalVenta * 0.08;
+        }
 
         if (Math.abs(totalPagos - totalVenta) > 1) {
             mostrarToast('Los montos no coinciden con el total corregido', 'warning');
