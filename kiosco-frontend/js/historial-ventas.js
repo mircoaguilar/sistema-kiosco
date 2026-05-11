@@ -310,16 +310,23 @@ async function abrirModalCorregir(idVenta) {
 function actualizarCamposMetodoPago() {
     const metodo = document.getElementById('correccion-metodo-pago').value;
 
-    console.log("Método seleccionado:", metodo);
-    console.log("Efectivo:", document.getElementById('correccion-monto-efectivo').value);
-    console.log("Transferencia:", document.getElementById('correccion-monto-transferencia').value);
-    console.log("Tarjeta:", document.getElementById('correccion-monto-tarjeta').value);
-
+    const inputEfectivo = document.getElementById('correccion-monto-efectivo');
+    const inputTransferencia = document.getElementById('correccion-monto-transferencia');
+    const inputTarjeta = document.getElementById('correccion-monto-tarjeta');
 
     const grupoEfectivo = document.getElementById('grupo-efectivo');
     const grupoTransferencia = document.getElementById('grupo-transferencia');
     const grupoTarjeta = document.getElementById('grupo-tarjeta');
     const grupoTipoTarjeta = document.getElementById('grupo-tipo-tarjeta');
+
+    const totalActual =
+        (parseFloat(inputEfectivo.value) || 0) +
+        (parseFloat(inputTransferencia.value) || 0) +
+        (parseFloat(inputTarjeta.value) || 0);
+
+    inputEfectivo.value = 0;
+    inputTransferencia.value = 0;
+    inputTarjeta.value = 0;
 
     grupoEfectivo.style.display = 'none';
     grupoTransferencia.style.display = 'none';
@@ -328,15 +335,18 @@ function actualizarCamposMetodoPago() {
 
     if (metodo === 'efectivo') {
         grupoEfectivo.style.display = 'block';
+        inputEfectivo.value = totalActual.toFixed(2);
     }
 
     if (metodo === 'transferencia') {
         grupoTransferencia.style.display = 'block';
+        inputTransferencia.value = totalActual.toFixed(2);
     }
 
     if (metodo === 'tarjeta') {
         grupoTarjeta.style.display = 'block';
         grupoTipoTarjeta.style.display = 'block';
+        inputTarjeta.value = totalActual.toFixed(2);
     }
 
     if (metodo === 'mixto') {
@@ -345,6 +355,11 @@ function actualizarCamposMetodoPago() {
         grupoTarjeta.style.display = 'block';
         grupoTipoTarjeta.style.display = 'block';
     }
+
+    console.log("Método seleccionado:", metodo);
+    console.log("Efectivo:", inputEfectivo.value);
+    console.log("Transferencia:", inputTransferencia.value);
+    console.log("Tarjeta:", inputTarjeta.value);
 }
 
 function renderProductosCorreccion() {
