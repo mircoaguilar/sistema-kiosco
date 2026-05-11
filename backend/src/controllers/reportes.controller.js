@@ -4,34 +4,39 @@ const reportesController = {
 
     reporteProductosDia: async (req, res) => {
         try {
-            const { categoria, proveedor, desde, hasta } = req.query;
+            const {
+                categoria,
+                proveedor,
+                desde,
+                hasta,
+                hora_desde,
+                hora_hasta
+            } = req.query;
 
             let filtrosProductos = `WHERE 1=1`;
             let paramsProductos = [];
 
-            let filtrosVentas = `WHERE 1=1`;
-            let paramsVentas = [];
-
-            filtrosVentas += ` AND COALESCE(v.estado, 'activa') = 'activa'`;
-
             if (desde && hasta) {
                 filtrosProductos += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
                 paramsProductos.push(desde, hasta);
-                paramsVentas.push(desde, hasta);
             } else if (desde) {
                 filtrosProductos += ` AND DATE(v.fecha_hora) >= ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) >= ?`;
                 paramsProductos.push(desde);
-                paramsVentas.push(desde);
             } else if (hasta) {
                 filtrosProductos += ` AND DATE(v.fecha_hora) <= ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) <= ?`;
                 paramsProductos.push(hasta);
-                paramsVentas.push(hasta);
             } else {
                 filtrosProductos += ` AND DATE(v.fecha_hora) = CURDATE()`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) = CURDATE()`;
+            }
+
+            if (hora_desde) {
+                filtrosProductos += ` AND TIME(v.fecha_hora) >= ?`;
+                paramsProductos.push(hora_desde);
+            }
+
+            if (hora_hasta) {
+                filtrosProductos += ` AND TIME(v.fecha_hora) <= ?`;
+                paramsProductos.push(hora_hasta);
             }
 
             if (categoria) {
@@ -54,10 +59,12 @@ const reportesController = {
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 LEFT JOIN categorias c 
-                ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
-                LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
-                JOIN ventas v ON dv.id_venta = v.id_venta
-                AND COALESCE(v.estado, 'activa') = 'activa'
+                    ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
+                LEFT JOIN proveedores pr 
+                    ON p.id_proveedor = pr.id_proveedor
+                JOIN ventas v 
+                    ON dv.id_venta = v.id_venta
+                    AND COALESCE(v.estado, 'activa') = 'activa'
                 ${filtrosProductos}
                 GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
                 ORDER BY total DESC
@@ -67,11 +74,51 @@ const reportesController = {
                 return acc + parseFloat(item.total);
             }, 0);
 
+            let filtrosCantidad = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+            let paramsCantidad = [];
+
+            if (desde && hasta) {
+                filtrosCantidad += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
+                paramsCantidad.push(desde, hasta);
+            } else if (desde) {
+                filtrosCantidad += ` AND DATE(v.fecha_hora) >= ?`;
+                paramsCantidad.push(desde);
+            } else if (hasta) {
+                filtrosCantidad += ` AND DATE(v.fecha_hora) <= ?`;
+                paramsCantidad.push(hasta);
+            } else {
+                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURDATE()`;
+            }
+
+            if (hora_desde) {
+                filtrosCantidad += ` AND TIME(v.fecha_hora) >= ?`;
+                paramsCantidad.push(hora_desde);
+            }
+
+            if (hora_hasta) {
+                filtrosCantidad += ` AND TIME(v.fecha_hora) <= ?`;
+                paramsCantidad.push(hora_hasta);
+            }
+
+            if (categoria) {
+                filtrosCantidad += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
+                paramsCantidad.push(categoria, categoria);
+            }
+
+            if (proveedor) {
+                filtrosCantidad += ` AND p.id_proveedor = ?`;
+                paramsCantidad.push(proveedor);
+            }
+
             const [ventasCount] = await db.query(`
-                SELECT COUNT(*) AS total_ventas
+                SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
-                ${filtrosVentas}
-            `, paramsVentas);
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                ${filtrosCantidad}
+            `, paramsCantidad);
 
             const cantidadVentas = ventasCount[0].total_ventas;
 

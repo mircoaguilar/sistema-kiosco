@@ -50,6 +50,8 @@ async function cargarReporte() {
         const hasta = document.getElementById('filtro-hasta').value;
         const categoria = document.getElementById('filtro-categoria').value;
         const proveedor = document.getElementById('filtro-proveedor').value;
+        const horaDesde = document.getElementById('filtro-hora-desde').value;
+        const horaHasta = document.getElementById('filtro-hora-hasta').value;
 
         let url = `${API_URL}/reportes/productos-dia`;
         const params = [];
@@ -58,6 +60,8 @@ async function cargarReporte() {
         if (proveedor) params.push(`proveedor=${proveedor}`);
         if (desde) params.push(`desde=${desde}`);
         if (hasta) params.push(`hasta=${hasta}`);
+        if (horaDesde) params.push(`hora_desde=${horaDesde}`);
+        if (horaHasta) params.push(`hora_hasta=${horaHasta}`);
 
         if (params.length > 0) {
             url += '?' + params.join('&');
@@ -132,6 +136,8 @@ document.getElementById('btn-limpiar').addEventListener('click', () => {
 
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
+    document.getElementById('filtro-hora-desde').value = '';
+    document.getElementById('filtro-hora-hasta').value = '';
 
     cargarReporte();
 });
@@ -140,6 +146,8 @@ document.getElementById('filtro-categoria').addEventListener('change', cargarRep
 document.getElementById('filtro-proveedor').addEventListener('change', cargarReporte);
 document.getElementById('filtro-desde').addEventListener('change', cargarReporte);
 document.getElementById('filtro-hasta').addEventListener('change', cargarReporte);
+document.getElementById('filtro-hora-desde').addEventListener('change', cargarReporte);
+document.getElementById('filtro-hora-hasta').addEventListener('change', cargarReporte);
 
 document.getElementById('btn-logout').addEventListener('click', () => {
     localStorage.clear();

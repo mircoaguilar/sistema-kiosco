@@ -140,35 +140,46 @@
 
             <div class="row g-3 align-items-end">
 
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Desde</label>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Desde (Fecha)</label>
                     <input type="date" id="filtro-desde" class="form-control">
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Hasta</label>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Hasta (Fecha)</label>
                     <input type="date" id="filtro-hasta" class="form-control">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Hora Desde</label>
+                    <input type="time" id="filtro-hora-desde" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Hora Hasta</label>
+                    <input type="time" id="filtro-hora-hasta" class="form-control">
+                </div>
+
+                <div class="col-md-2">
                     <label class="form-label small fw-bold">Categoría</label>
                     <select id="filtro-categoria" class="form-select">
                         <option value="">Todas las categorías</option>
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-bold">Proveedor</label>
                     <select id="filtro-proveedor" class="form-select">
                         <option value="">Todos los proveedores</option>
                     </select>
                 </div>
 
-                <div class="col-12 d-flex justify-content-end">
+                <div class="col-12 d-flex justify-content-end gap-2">
                     <button id="btn-limpiar" class="btn btn-secondary">
                         Limpiar
                     </button>
                 </div>
+
             </div>
         </div>
     </div>
