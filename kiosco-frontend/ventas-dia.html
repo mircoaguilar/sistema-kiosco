@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas del Día</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/tempus-dominus.min.css" rel="stylesheet">
     <script>
         const authToken = localStorage.getItem('jwt_token');
         const rol = localStorage.getItem('rol');
@@ -156,15 +157,43 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold">Hora Hasta</label>
-                    <input type="time" id="filtro-hora-hasta" class="form-control">
+                    <label class="form-label small fw-bold">Hora Desde</label>
+                    <div class="input-group" id="contenedor-hora-desde" data-td-target-input="nearest" data-td-target-toggle="nearest">
+                        <input 
+                            type="text"
+                            id="filtro-hora-desde"
+                            class="form-control"
+                            data-td-target="#contenedor-hora-desde"
+                            placeholder="Seleccionar hora"
+                        />
+                        <span 
+                            class="input-group-text"
+                            data-td-target="#contenedor-hora-desde"
+                            data-td-toggle="datetimepicker"
+                        >
+                            🕒
+                        </span>
+                    </div>
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold">Categoría</label>
-                    <select id="filtro-categoria" class="form-select">
-                        <option value="">Todas las categorías</option>
-                    </select>
+                    <label class="form-label small fw-bold">Hora Hasta</label>
+                    <div class="input-group" id="contenedor-hora-hasta" data-td-target-input="nearest" data-td-target-toggle="nearest">
+                        <input 
+                            type="text"
+                            id="filtro-hora-hasta"
+                            class="form-control"
+                            data-td-target="#contenedor-hora-hasta"
+                            placeholder="Seleccionar hora"
+                        />
+                        <span 
+                            class="input-group-text"
+                            data-td-target="#contenedor-hora-hasta"
+                            data-td-toggle="datetimepicker"
+                        >
+                            🕒
+                        </span>
+                    </div>
                 </div>
 
                 <div class="col-md-2">
@@ -220,6 +249,7 @@
 </div>
 
 <script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/tempus-dominus.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/ventas-dia.js"></script>
 

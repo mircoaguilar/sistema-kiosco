@@ -60,8 +60,8 @@ async function cargarReporte() {
         if (proveedor) params.push(`proveedor=${proveedor}`);
         if (desde) params.push(`desde=${desde}`);
         if (hasta) params.push(`hasta=${hasta}`);
-        if (horaDesde) params.push(`hora_desde=${horaDesde}`);
-        if (horaHasta) params.push(`hora_hasta=${horaHasta}`);
+        if (horaDesde) params.push(`hora_desde=${encodeURIComponent(horaDesde)}`);
+        if (horaHasta) params.push(`hora_hasta=${encodeURIComponent(horaHasta)}`);
 
         if (params.length > 0) {
             url += '?' + params.join('&');
@@ -162,6 +162,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
+
+    new tempusDominus.TempusDominus(
+        document.getElementById('contenedor-hora-desde'),
+        {
+            display: {
+                components: {
+                    calendar: false,
+                    date: false,
+                    month: false,
+                    year: false,
+                    decades: false,
+                    clock: true,
+                    hours: true,
+                    minutes: true,
+                    seconds: false
+                }
+            },
+            localization: {
+                locale: 'es-AR',
+                format: 'HH:mm'
+            }
+        }
+    );
+
+    new tempusDominus.TempusDominus(
+        document.getElementById('contenedor-hora-hasta'),
+        {
+            display: {
+                components: {
+                    calendar: false,
+                    date: false,
+                    month: false,
+                    year: false,
+                    decades: false,
+                    clock: true,
+                    hours: true,
+                    minutes: true,
+                    seconds: false
+                }
+            },
+            localization: {
+                locale: 'es-AR',
+                format: 'HH:mm'
+            }
+        }
+    );
 
     await cargarFiltros();
     await cargarReporte();
