@@ -310,6 +310,12 @@ async function abrirModalCorregir(idVenta) {
 function actualizarCamposMetodoPago() {
     const metodo = document.getElementById('correccion-metodo-pago').value;
 
+    console.log("Método seleccionado:", metodo);
+    console.log("Efectivo:", document.getElementById('correccion-monto-efectivo').value);
+    console.log("Transferencia:", document.getElementById('correccion-monto-transferencia').value);
+    console.log("Tarjeta:", document.getElementById('correccion-monto-tarjeta').value);
+
+
     const grupoEfectivo = document.getElementById('grupo-efectivo');
     const grupoTransferencia = document.getElementById('grupo-transferencia');
     const grupoTarjeta = document.getElementById('grupo-tarjeta');
@@ -472,6 +478,16 @@ document.getElementById('confirmar-correccion').addEventListener('click', async 
         if (metodo_pago === 'tarjeta') {
             totalVenta += totalVenta * 0.08;
         }
+
+        console.log("TOTAL VENTA:", totalVenta);
+        console.log("TOTAL PAGOS:", totalPagos);
+        console.log({
+            metodo_pago,
+            monto_efectivo,
+            monto_transferencia,
+            monto_tarjeta,
+            tipo_tarjeta
+        });
 
         if (Math.abs(totalPagos - totalVenta) > 1) {
             mostrarToast('Los montos no coinciden con el total corregido', 'warning');
