@@ -623,6 +623,8 @@ document.getElementById('btn-limpiar').addEventListener('click', () => {
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
     document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-hora-desde').value = '';
+    document.getElementById('filtro-hora-hasta').value = '';
 
     cargarHistorial();
 });
@@ -658,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dateFormat: "H:i",
         time_24hr: true
     });
-    
+
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
 
