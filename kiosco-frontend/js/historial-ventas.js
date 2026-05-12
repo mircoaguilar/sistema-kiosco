@@ -41,12 +41,18 @@ async function cargarHistorial() {
         const hasta = document.getElementById('filtro-hasta').value;
         const estado = document.getElementById('filtro-estado').value;
 
+        const horaDesde = document.getElementById('filtro-hora-desde').value;
+        const horaHasta = document.getElementById('filtro-hora-hasta').value;
+
         let url = `${API_URL}/ventas/historial`;
         const params = [];
 
         if (desde) params.push(`desde=${desde}`);
         if (hasta) params.push(`hasta=${hasta}`);
         if (estado) params.push(`estado=${estado}`);
+
+        if (horaDesde) params.push(`hora_desde=${horaDesde}`);
+        if (horaHasta) params.push(`hora_hasta=${horaHasta}`);
 
         if (params.length > 0) {
             url += '?' + params.join('&');
@@ -629,6 +635,8 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 document.getElementById('filtro-desde').addEventListener('change', cargarHistorial);
 document.getElementById('filtro-hasta').addEventListener('change', cargarHistorial);
 document.getElementById('filtro-estado').addEventListener('change', cargarHistorial);
+document.getElementById('filtro-hora-desde').addEventListener('change', cargarHistorial);
+document.getElementById('filtro-hora-hasta').addEventListener('change', cargarHistorial);
 
 
 document.addEventListener('DOMContentLoaded', async () => {

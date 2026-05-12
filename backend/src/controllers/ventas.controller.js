@@ -146,9 +146,10 @@ const ventasController = {
             res.status(500).json({ error: "Error al reimprimir" });
         }
     },
+
     historialVentas: async (req, res) => {
         try {
-            const { desde, hasta, estado } = req.query;
+            const { desde, hasta, estado, hora_desde, hora_hasta } = req.query;
 
             let filtros = `WHERE 1=1`;
             let params = [];
@@ -161,6 +162,16 @@ const ventasController = {
             if (hasta) {
                 filtros += ` AND DATE(v.fecha_hora) <= ?`;
                 params.push(hasta);
+            }
+
+            if (hora_desde) {
+                filtros += ` AND TIME(v.fecha_hora) >= ?`;
+                params.push(hora_desde);
+            }
+
+            if (hora_hasta) {
+                filtros += ` AND TIME(v.fecha_hora) <= ?`;
+                params.push(hora_hasta);
             }
 
             if (estado) {
