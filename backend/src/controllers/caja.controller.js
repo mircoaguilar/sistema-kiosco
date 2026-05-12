@@ -86,7 +86,8 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    SUM(monto_tarjeta) as tar
+                    /* Sumamos el monto base de tarjeta + el recargo de esa venta */
+                    SUM(monto_tarjeta + recargo_monto) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
@@ -163,7 +164,8 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    SUM(monto_tarjeta) as tar
+                    /* Sumamos el monto base de tarjeta + el recargo de esa venta */
+                    SUM(monto_tarjeta + recargo_monto) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
