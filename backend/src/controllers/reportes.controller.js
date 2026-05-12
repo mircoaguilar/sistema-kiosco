@@ -97,7 +97,6 @@ const reportesController = {
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
                 JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
-                WHERE v.estado = 'activa'
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 ${filtrosCantidad}
             `, paramsCantidad);
