@@ -75,7 +75,11 @@ const reportesController = {
                     MAX(c.nombre_categoria) AS categoria,
                     MAX(pr.nombre) AS proveedor,
                     SUM(dv.cantidad) AS cantidad,
-                    SUM(dv.subtotal) AS total
+                    /* 
+                    Calculamos el subtotal con recargo:
+                    Multiplicamos el subtotal del detalle por (1 + porcentaje_recargo / 100)
+                    */
+                    SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)) AS total
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 LEFT JOIN categorias c 
