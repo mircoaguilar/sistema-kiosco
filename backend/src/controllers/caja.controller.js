@@ -86,8 +86,7 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    /* Sumamos el monto base de tarjeta + el recargo de esa venta */
-                    SUM(monto_tarjeta + recargo_monto) as tar
+                    SUM(total_final - monto_efectivo - monto_transferencia) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
@@ -164,8 +163,7 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    /* Sumamos el monto base de tarjeta + el recargo de esa venta */
-                    SUM(monto_tarjeta + recargo_monto) as tar
+                    SUM(total_final - monto_efectivo - monto_transferencia) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
@@ -209,15 +207,15 @@ const cajaController = {
 
                 UNION ALL
 
-                SELECT 
+               SELECT 
                     fecha_hora,
                     CONCAT('Venta #', id_venta) as descripcion,
                     'venta' as tipo,
                     'tarjeta' as medio,
-                    /* Cambiamos monto_tarjeta por la suma con el recargo */
-                    (monto_tarjeta + recargo_monto) as monto
+                    (total_final - monto_efectivo - monto_transferencia) as monto
                 FROM ventas 
-                WHERE id_sesion = ? AND monto_tarjeta > 0
+                WHERE id_sesion = ? 
+                AND (total_final - monto_efectivo - monto_transferencia) > 0
                 AND COALESCE(estado, 'activa') = 'activa'
 
                 UNION ALL
