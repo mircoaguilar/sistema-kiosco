@@ -210,11 +210,12 @@ const cajaController = {
                 UNION ALL
 
                 SELECT 
-                fecha_hora,
-                CONCAT('Venta #', id_venta) as descripcion,
-                'venta' as tipo,
-                'tarjeta' as medio,
-                monto_tarjeta as monto
+                    fecha_hora,
+                    CONCAT('Venta #', id_venta) as descripcion,
+                    'venta' as tipo,
+                    'tarjeta' as medio,
+                    /* Cambiamos monto_tarjeta por la suma con el recargo */
+                    (monto_tarjeta + recargo_monto) as monto
                 FROM ventas 
                 WHERE id_sesion = ? AND monto_tarjeta > 0
                 AND COALESCE(estado, 'activa') = 'activa'
