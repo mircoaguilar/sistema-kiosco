@@ -22,7 +22,8 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.20.0",
     "node-thermal-printer": "^4.6.0",
-    "pdf-to-printer": "^5.7.0"
+    "pdf-to-printer": "^5.7.0",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
