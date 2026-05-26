@@ -5,7 +5,7 @@ const path = require('path');
 
 const printer = new ThermalPrinter({
     type: PrinterTypes.EPSON,
-    interface: 'tcp://localhost', 
+    interface: '\\\\127.0.0.1\\POS',
     width: 32 
 });
 
@@ -69,7 +69,7 @@ async function imprimirTicket(venta) {
         const tempFile = path.join(__dirname, 'ticket.bin');
         fs.writeFileSync(tempFile, buffer);
 
-        const printerSharedName = "POS58"; 
+        const printerSharedName = "POS"; 
         const command = `cmd /c copy /b "${tempFile}" "\\\\127.0.0.1\\${printerSharedName}"`;
 
         exec(command, (error) => {
