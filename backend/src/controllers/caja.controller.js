@@ -86,7 +86,7 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    SUM(monto_tarjeta) as tar
+                    SUM(total_final - monto_efectivo - monto_transferencia) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
@@ -163,7 +163,7 @@ const cajaController = {
                 `SELECT 
                     SUM(monto_efectivo) as efe,
                     SUM(monto_transferencia) as dig,
-                    SUM(monto_tarjeta) as tar
+                    SUM(total_final - monto_efectivo - monto_transferencia) as tar
                 FROM ventas
                 WHERE id_sesion = ?
                 AND COALESCE(estado, 'activa') = 'activa'`,
@@ -207,14 +207,15 @@ const cajaController = {
 
                 UNION ALL
 
-                SELECT 
-                fecha_hora,
-                CONCAT('Venta #', id_venta) as descripcion,
-                'venta' as tipo,
-                'tarjeta' as medio,
-                monto_tarjeta as monto
+               SELECT 
+                    fecha_hora,
+                    CONCAT('Venta #', id_venta) as descripcion,
+                    'venta' as tipo,
+                    'tarjeta' as medio,
+                    (total_final - monto_efectivo - monto_transferencia) as monto
                 FROM ventas 
-                WHERE id_sesion = ? AND monto_tarjeta > 0
+                WHERE id_sesion = ? 
+                AND (total_final - monto_efectivo - monto_transferencia) > 0
                 AND COALESCE(estado, 'activa') = 'activa'
 
                 UNION ALL

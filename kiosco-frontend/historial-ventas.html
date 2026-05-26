@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Ventas</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/flatpickr.min.css" rel="stylesheet">
 
     <style>
         .table-responsive {
@@ -155,7 +156,17 @@
                     <input type="date" id="filtro-hasta" class="form-control">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Hora Desde</label>
+                    <input type="text" id="filtro-hora-desde" class="form-control" placeholder="Seleccionar hora">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Hora Hasta</label>
+                    <input type="text" id="filtro-hora-hasta" class="form-control" placeholder="Seleccionar hora">
+                </div>
+
+                <div class="col-md-2">
                     <label class="form-label small fw-bold">Estado</label>
                     <select id="filtro-estado" class="form-select">
                         <option value="">Todas</option>
@@ -164,7 +175,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3 d-flex justify-content-end">
+                <div class="col-12 d-flex justify-content-end">
                     <button id="btn-limpiar" class="btn btn-secondary">
                         Limpiar
                     </button>
@@ -375,6 +386,7 @@
 
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="/js/config.js"></script>
+<script src="/js/flatpickr.js"></script>
 <script src="/js/historial-ventas.js"></script>
 
 </body>

@@ -4,44 +4,69 @@ const reportesController = {
 
     reporteProductosDia: async (req, res) => {
         try {
-            const { categoria, proveedor, desde, hasta } = req.query;
+            const {
+                categoria,
+                proveedor,
+                desde,
+                hasta,
+                hora_desde,
+                hora_hasta
+            } = req.query;
 
-            let filtrosProductos = `WHERE 1=1`;
+            let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
             let paramsProductos = [];
 
-            let filtrosVentas = `WHERE 1=1`;
-            let paramsVentas = [];
+            let filtrosCantidad = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+            let paramsCantidad = [];
 
-            filtrosVentas += ` AND COALESCE(v.estado, 'activa') = 'activa'`;
+            let fechaInicio = null;
+            let fechaFin = null;
 
-            if (desde && hasta) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
-                paramsProductos.push(desde, hasta);
-                paramsVentas.push(desde, hasta);
-            } else if (desde) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) >= ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) >= ?`;
-                paramsProductos.push(desde);
-                paramsVentas.push(desde);
-            } else if (hasta) {
-                filtrosProductos += ` AND DATE(v.fecha_hora) <= ?`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) <= ?`;
-                paramsProductos.push(hasta);
-                paramsVentas.push(hasta);
+            if (desde) {
+                fechaInicio = `${desde} ${hora_desde || '00:00:00'}`;
+            }
+
+            if (hasta) {
+                fechaFin = `${hasta} ${hora_hasta || '23:59:59'}`;
+            }
+
+            if (fechaInicio && fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora BETWEEN ? AND ?`;
+                filtrosCantidad += ` AND v.fecha_hora BETWEEN ? AND ?`;
+                paramsProductos.push(fechaInicio, fechaFin);
+                paramsCantidad.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosProductos += ` AND v.fecha_hora >= ?`;
+                filtrosCantidad += ` AND v.fecha_hora >= ?`;
+                paramsProductos.push(fechaInicio);
+                paramsCantidad.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora <= ?`;
+                filtrosCantidad += ` AND v.fecha_hora <= ?`;
+                paramsProductos.push(fechaFin);
+                paramsCantidad.push(fechaFin);
+
             } else {
                 filtrosProductos += ` AND DATE(v.fecha_hora) = CURDATE()`;
-                filtrosVentas += ` AND DATE(v.fecha_hora) = CURDATE()`;
+                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURDATE()`;
             }
 
             if (categoria) {
                 filtrosProductos += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
+                filtrosCantidad += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
                 paramsProductos.push(categoria, categoria);
+                paramsCantidad.push(categoria, categoria);
             }
 
             if (proveedor) {
                 filtrosProductos += ` AND p.id_proveedor = ?`;
+                filtrosCantidad += ` AND p.id_proveedor = ?`;
                 paramsProductos.push(proveedor);
+                paramsCantidad.push(proveedor);
             }
 
             const [rows] = await db.query(`
@@ -50,14 +75,19 @@ const reportesController = {
                     MAX(c.nombre_categoria) AS categoria,
                     MAX(pr.nombre) AS proveedor,
                     SUM(dv.cantidad) AS cantidad,
-                    SUM(dv.subtotal) AS total
+                    /* 
+                    Calculamos el subtotal con recargo:
+                    Multiplicamos el subtotal del detalle por (1 + porcentaje_recargo / 100)
+                    */
+                    SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)) AS total
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 LEFT JOIN categorias c 
-                ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
-                LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
-                JOIN ventas v ON dv.id_venta = v.id_venta
-                AND COALESCE(v.estado, 'activa') = 'activa'
+                    ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
+                LEFT JOIN proveedores pr 
+                    ON p.id_proveedor = pr.id_proveedor
+                JOIN ventas v 
+                    ON dv.id_venta = v.id_venta
                 ${filtrosProductos}
                 GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
                 ORDER BY total DESC
@@ -68,10 +98,12 @@ const reportesController = {
             }, 0);
 
             const [ventasCount] = await db.query(`
-                SELECT COUNT(*) AS total_ventas
+                SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
-                ${filtrosVentas}
-            `, paramsVentas);
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                ${filtrosCantidad}
+            `, paramsCantidad);
 
             const cantidadVentas = ventasCount[0].total_ventas;
 
