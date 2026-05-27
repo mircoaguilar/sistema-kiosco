@@ -21,6 +21,13 @@ const corsOptions = {
     credentials: true
 };
 
+const printRoutes = require('./src/routes/print.routes');
+
+app.use('/api/print', (req, res, next) => {
+    console.log("PRINT REQUEST:", req.method, req.url);
+    next();
+});
+
 app.use(cors(corsOptions)); 
 
 app.use(express.json());
@@ -34,6 +41,7 @@ app.use('/api/categorias', require('./src/routes/categorias.routes'));
 app.use('/api/proveedores', require('./src/routes/proveedores.routes'));
 app.use('/api/reportes', require('./src/routes/reportes.routes'));
 app.use('/api/usuarios', require('./src/routes/usuarios.routes'));
+app.use("/api/print", printRoutes);
 
 app.get('/test-db', async (req, res) => {
     try {
