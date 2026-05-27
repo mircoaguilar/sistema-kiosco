@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let carrito = [];
 let todosLosProductos = [];
 window.montoDigitalTemporal = 0;
+let ultimaVentaRegistrada = null;
 
 const inputCodigo = document.getElementById('input-codigo');
 const tablaCarrito = document.getElementById('tabla-carrito');
@@ -56,6 +57,21 @@ const mixtoTransferencia = document.getElementById('mixto-transferencia');
 const modalTarjeta = new bootstrap.Modal(document.getElementById('modalTarjeta'));
 const tarjetaTotal = document.getElementById('tarjeta-total');
 
+function enviarATiqueteraLocal(venta) {
+    fetch('http://localhost:3000/imprimir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(venta)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.ok) console.error("Error devuelto por la tiquetera:", data.error);
+    })
+    .catch(err => {
+        console.error("El agente de impresión local (print-agent) está apagado:", err);
+        mostrarToast("Tiquetera local desconectada o apagada", "warning");
+    });
+}
 
 function mostrarToast(mensaje, tipo = "success") {
     const toastEl = document.getElementById('toast');
@@ -264,6 +280,19 @@ async function procesarVenta(metodo) {
         });
 
         if (!res.ok) throw new Error();
+
+        const respuestaData = await res.json().catch(() => ({}));
+        
+        ultimaVentaRegistrada = {
+            id_venta: respuestaData.id_venta || "NUEVA",
+            total_venta: totalVenta,
+            monto_pagado: montoPagado,
+            items: [...carrito] 
+        };
+
+        if (imprimirTicket) {
+            enviarATiqueteraLocal(ultimaVentaRegistrada);
+        }
 
         mostrarToast("Venta exitosa", "success");
 
@@ -480,18 +509,12 @@ document.getElementById('btn-cancelar-peso').onclick = () => {
     bootstrap.Modal.getInstance(document.getElementById('modalPeso')).hide();
 };
 
-document.getElementById('btn-reimprimir-ultimo').onclick = async () => {
-    try {
-        const res = await fetch(`${API_URL}/ventas/reimprimir`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error();
-
-        mostrarToast("Ticket reimpreso", "success");
-
-    } catch {
-        mostrarToast("Error al reimprimir", "error");
+document.getElementById('btn-reimprimir-ultimo').onclick = () => {
+    if (ultimaVentaRegistrada) {
+        mostrarToast("Reimprimiendo ticket...", "success");
+        enviarATiqueteraLocal(ultimaVentaRegistrada);
+    } else {
+        mostrarToast("No hay ventas en esta sesión para reimprimir", "warning");
     }
 };
 
