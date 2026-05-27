@@ -37,21 +37,10 @@ app.use('/api/usuarios', require('./src/routes/usuarios.routes'));
 
 app.get('/test-db', async (req, res) => {
     try {
-        const result = await db.query('SELECT 1 + 1 AS result');
-
-        res.json({
-            message: "Conexión exitosa",
-            result: result.rows
-        });
-
+        const [rows] = await db.query('SELECT 1 + 1 AS result');
+        res.json({ message: "Conexión exitosa", result: rows });
     } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            error: "Error en DB",
-            details: error.message
-        });
+        res.status(500).json({ error: "Error en DB", details: error.message });
     }
 });
 
