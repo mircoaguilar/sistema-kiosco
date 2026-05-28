@@ -2,6 +2,7 @@ const db = require('../config/db');
 const { imprimirTicket } = require('../services/printer');
 
 const ventasController = {
+
     crearVenta: async (req, res) => {
         const {
             metodo_pago,
@@ -21,43 +22,68 @@ const ventasController = {
             return res.status(400).json({ error: "Lista de items inválida" });
         }
 
-        const connection = await db.getConnection();
-        await connection.beginTransaction();
-
         try {
+            await db.query('BEGIN');
+
             let recargo_porcentaje = 0;
             let recargo_monto = 0;
             let base_total = parseFloat(total_venta);
-            
+
             if (metodo_pago === 'tarjeta') {
                 recargo_porcentaje = 8;
                 recargo_monto = base_total * 0.08;
             }
 
             const total_final = base_total + recargo_monto;
-            const efectivoFinal = (metodo_pago === 'efectivo' || metodo_pago === 'mixto') ? (monto_efectivo || 0) : 0;
-            const transferenciaFinal = (metodo_pago === 'transferencia' || metodo_pago === 'mixto') ? (monto_transferencia || 0) : 0;
-            const tarjetaFinal = (metodo_pago === 'tarjeta') ? base_total : 0;
 
-            const [ventaResult] = await connection.query(
+            const efectivoFinal =
+                (metodo_pago === 'efectivo' || metodo_pago === 'mixto')
+                    ? (monto_efectivo || 0)
+                    : 0;
+
+            const transferenciaFinal =
+                (metodo_pago === 'transferencia' || metodo_pago === 'mixto')
+                    ? (monto_transferencia || 0)
+                    : 0;
+
+            const tarjetaFinal =
+                metodo_pago === 'tarjeta'
+                    ? base_total
+                    : 0;
+
+            const ventaResult = await db.query(
                 `INSERT INTO ventas 
                 (id_usuario, id_sesion, total_venta, total_final,
                 monto_efectivo, monto_transferencia, monto_tarjeta,
                 metodo_pago, tipo_tarjeta,
                 recargo_porcentaje, recargo_monto)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [id_usuario, id_sesion, base_total, total_final, efectivoFinal, transferenciaFinal, tarjetaFinal, metodo_pago, tipo_tarjeta || null, recargo_porcentaje, recargo_monto]
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+                RETURNING id_venta`,
+                [
+                    id_usuario,
+                    id_sesion,
+                    base_total,
+                    total_final,
+                    efectivoFinal,
+                    transferenciaFinal,
+                    tarjetaFinal,
+                    metodo_pago,
+                    tipo_tarjeta || null,
+                    recargo_porcentaje,
+                    recargo_monto
+                ]
             );
 
-            const id_venta = ventaResult.insertId;
+            const id_venta = ventaResult.rows[0].id_venta;
 
             for (const item of items) {
                 const cantidad = item.es_manual ? 1 : item.cantidad;
+
                 if (item.es_manual) {
-                    await connection.query(
-                        `INSERT INTO detalle_ventas 
-                        (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal, id_categoria) 
-                        VALUES (?, NULL, ?, 1, ?, ?, ?, ?)`,
+                    await db.query(
+                        `INSERT INTO detalle_ventas
+                        (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal, id_categoria)
+                        VALUES ($1, NULL, $2, true, $3, $4, $5, $6)`,
                         [
                             id_venta,
                             item.descripcion_manual,
@@ -68,10 +94,10 @@ const ventasController = {
                         ]
                     );
                 } else {
-                    await connection.query(
-                        `INSERT INTO detalle_ventas 
-                        (id_venta, id_producto, cantidad, precio_unitario, subtotal) 
-                        VALUES (?, ?, ?, ?, ?)`,
+                    await db.query(
+                        `INSERT INTO detalle_ventas
+                        (id_venta, id_producto, cantidad, precio_unitario, subtotal)
+                        VALUES ($1,$2,$3,$4,$5)`,
                         [
                             id_venta,
                             item.id_producto,
@@ -81,37 +107,61 @@ const ventasController = {
                         ]
                     );
 
-                    await connection.query(
-                        `UPDATE productos SET stock = stock - ? WHERE id_producto = ?`,
+                    await db.query(
+                        `UPDATE productos 
+                        SET stock = stock - $1 
+                        WHERE id_producto = $2`,
                         [cantidad, item.id_producto]
                     );
                 }
             }
 
-            await connection.commit();
+            await db.query('COMMIT');
 
             if (imprimir_ticket) {
                 try {
-                    await imprimirTicket({ id_venta, total_venta: base_total, total_final, metodo_pago, tipo_tarjeta, recargo_monto, monto_pagado: total_final, items });
-                } catch (pErr) { console.error("Error ticket:", pErr); }
+                    await imprimirTicket({
+                        id_venta,
+                        total_venta: base_total,
+                        total_final,
+                        metodo_pago,
+                        tipo_tarjeta,
+                        recargo_monto,
+                        monto_pagado: total_final,
+                        items
+                    });
+                } catch (pErr) {
+                    console.error("Error ticket:", pErr);
+                }
             }
 
-            res.json({ message: "Venta registrada", id_venta });
+            res.json({
+                message: "Venta registrada",
+                id_venta
+            });
 
         } catch (error) {
-            await connection.rollback();
-            res.status(500).json({ error: error.message });
-        } finally {
-            connection.release();
+            await db.query('ROLLBACK');
+
+            res.status(500).json({
+                error: "Error en venta",
+                details: error.message
+            });
         }
     },
 
     reimprimirUltimo: async (req, res) => {
         try {
-            const [ventas] = await db.query(
-                `SELECT * FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1`,
+            const ventasResult = await db.query(
+                `SELECT * 
+                FROM ventas 
+                WHERE id_usuario = $1 
+                ORDER BY id_venta DESC 
+                LIMIT 1`,
                 [req.user.id]
             );
+
+            const ventas = ventasResult.rows;
 
             if (ventas.length === 0) {
                 return res.status(404).json({ error: "No hay ventas para reimprimir" });
@@ -119,15 +169,17 @@ const ventasController = {
 
             const venta = ventas[0];
 
-            const [items] = await db.query(
+            const itemsResult = await db.query(
                 `SELECT 
                     dv.*,
                     COALESCE(dv.descripcion_manual, p.nombre) AS nombre
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                WHERE dv.id_venta = ?`,
+                WHERE dv.id_venta = $1`,
                 [venta.id_venta]
             );
+
+            const items = itemsResult.rows;
 
             await imprimirTicket({
                 id_venta: venta.id_venta,
@@ -141,6 +193,7 @@ const ventasController = {
             });
 
             res.json({ message: "Ticket enviado a la impresora" });
+
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Error al reimprimir" });
@@ -153,33 +206,34 @@ const ventasController = {
 
             let filtros = `WHERE 1=1`;
             let params = [];
+            let idx = 1;
 
             if (desde) {
-                filtros += ` AND DATE(v.fecha_hora) >= ?`;
+                filtros += ` AND DATE(v.fecha_hora) >= $${idx++}`;
                 params.push(desde);
             }
 
             if (hasta) {
-                filtros += ` AND DATE(v.fecha_hora) <= ?`;
+                filtros += ` AND DATE(v.fecha_hora) <= $${idx++}`;
                 params.push(hasta);
             }
 
             if (hora_desde) {
-                filtros += ` AND TIME(v.fecha_hora) >= ?`;
+                filtros += ` AND TIME(v.fecha_hora) >= $${idx++}`;
                 params.push(hora_desde);
             }
 
             if (hora_hasta) {
-                filtros += ` AND TIME(v.fecha_hora) <= ?`;
+                filtros += ` AND TIME(v.fecha_hora) <= $${idx++}`;
                 params.push(hora_hasta);
             }
 
             if (estado) {
-                filtros += ` AND v.estado = ?`;
+                filtros += ` AND v.estado = $${idx++}`;
                 params.push(estado);
             }
 
-            const [rows] = await db.query(
+            const result = await db.query(
                 `SELECT 
                     v.id_venta,
                     v.fecha_hora,
@@ -194,7 +248,7 @@ const ventasController = {
                 params
             );
 
-            res.json(rows);
+            res.json(result.rows);
 
         } catch (error) {
             res.status(500).json({
@@ -208,15 +262,17 @@ const ventasController = {
         const { id } = req.params;
 
         try {
-            const [ventas] = await db.query(
+            const ventasResult = await db.query(
                 `SELECT 
                     v.*,
                     u.nombre_completo AS vendedor
                 FROM ventas v
                 JOIN usuarios u ON v.id_usuario = u.id_usuario
-                WHERE v.id_venta = ?`,
+                WHERE v.id_venta = $1`,
                 [id]
             );
+
+            const ventas = ventasResult.rows;
 
             if (ventas.length === 0) {
                 return res.status(404).json({
@@ -226,15 +282,17 @@ const ventasController = {
 
             const venta = ventas[0];
 
-            const [items] = await db.query(
+            const itemsResult = await db.query(
                 `SELECT 
                     dv.*,
                     COALESCE(dv.descripcion_manual, p.nombre) AS nombre
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                WHERE dv.id_venta = ?`,
+                WHERE dv.id_venta = $1`,
                 [id]
             );
+
+            const items = itemsResult.rows;
 
             res.json({
                 venta,
@@ -259,88 +317,80 @@ const ventasController = {
             });
         }
 
-        const connection = await db.getConnection();
-        await connection.beginTransaction();
-
         try {
-            const [ventas] = await connection.query(
+            await db.query("BEGIN");
+
+            const ventasResult = await db.query(
                 `SELECT * 
-                 FROM ventas 
-                 WHERE id_venta = ?`,
+                FROM ventas 
+                WHERE id_venta = $1`,
                 [id]
             );
 
-            if (ventas.length === 0) {
-                await connection.rollback();
+            if (ventasResult.rows.length === 0) {
+                await db.query("ROLLBACK");
                 return res.status(404).json({
                     error: "Venta no encontrada"
                 });
             }
 
-            const venta = ventas[0];
+            const venta = ventasResult.rows[0];
 
-            if (venta.estado === 'anulada') {
-                await connection.rollback();
+            if (venta.estado === "anulada") {
+                await db.query("ROLLBACK");
                 return res.status(400).json({
                     error: "La venta ya fue anulada"
                 });
             }
 
-            const [detalles] = await connection.query(
+            const detallesResult = await db.query(
                 `SELECT * 
-                 FROM detalle_ventas 
-                 WHERE id_venta = ?`,
+                FROM detalle_ventas 
+                WHERE id_venta = $1`,
                 [id]
             );
 
-            for (const item of detalles) {
+            for (const item of detallesResult.rows) {
                 if (item.id_producto) {
-                    await connection.query(
+                    await db.query(
                         `UPDATE productos
-                        SET stock = stock + ?
-                        WHERE id_producto = ?`,
+                        SET stock = stock + $1
+                        WHERE id_producto = $2`,
                         [item.cantidad, item.id_producto]
                     );
                 }
             }
 
-            await connection.query(
+            await db.query(
                 `UPDATE ventas
-                 SET 
+                SET 
                     estado = 'anulada',
-                    motivo_anulacion = ?,
+                    motivo_anulacion = $1,
                     fecha_anulacion = NOW(),
-                    id_usuario_anulacion = ?
-                 WHERE id_venta = ?`,
-                [
-                    motivo,
-                    req.user.id,
-                    id
-                ]
+                    id_usuario_anulacion = $2
+                WHERE id_venta = $3`,
+                [motivo, req.user.id, id]
             );
 
-            await connection.commit();
+            await db.query("COMMIT");
 
-            res.json({
+            return res.json({
                 message: "Venta anulada correctamente"
             });
 
         } catch (error) {
-            await connection.rollback();
+            await db.query("ROLLBACK");
 
-            res.status(500).json({
+            return res.status(500).json({
                 error: "Error al anular venta",
                 details: error.message
             });
-
-        } finally {
-            connection.release();
         }
     },
 
     corregirVenta: async (req, res) => {
 
-        console.log("BODY CORRECCION:", req.body); 
+        console.log("BODY CORRECCION:", req.body);
 
         const { id } = req.params;
         const {
@@ -365,40 +415,41 @@ const ventasController = {
             });
         }
 
-        const connection = await db.getConnection();
-        await connection.beginTransaction();
-
         try {
-            const [ventas] = await connection.query(
-                `SELECT * FROM ventas WHERE id_venta = ?`,
+            await db.query("BEGIN");
+
+            const ventasResult = await db.query(
+                `SELECT * FROM ventas WHERE id_venta = $1`,
                 [id]
             );
 
-            if (ventas.length === 0) {
-                await connection.rollback();
+            if (ventasResult.rows.length === 0) {
+                await db.query("ROLLBACK");
                 return res.status(404).json({
                     error: "Venta no encontrada"
                 });
             }
 
-            const venta = ventas[0];
+            const venta = ventasResult.rows[0];
 
             if (venta.estado === 'anulada') {
-                await connection.rollback();
+                await db.query("ROLLBACK");
                 return res.status(400).json({
                     error: "No se puede corregir una venta anulada"
                 });
             }
 
-            const [detallesActuales] = await connection.query(
-                `SELECT * FROM detalle_ventas WHERE id_venta = ?`,
+            const detallesActualesResult = await db.query(
+                `SELECT * FROM detalle_ventas WHERE id_venta = $1`,
                 [id]
             );
 
-            await connection.query(
+            const detallesActuales = detallesActualesResult.rows;
+
+            await db.query(
                 `INSERT INTO ventas_correcciones
                 (id_venta, id_usuario, motivo, datos_anteriores)
-                VALUES (?, ?, ?, ?)`,
+                VALUES ($1, $2, $3, $4)`,
                 [
                     id,
                     req.user.id,
@@ -410,19 +461,20 @@ const ventasController = {
                 ]
             );
 
+            // devolver stock de items actuales
             for (const item of detallesActuales) {
                 if (item.id_producto) {
-                    await connection.query(
+                    await db.query(
                         `UPDATE productos
-                        SET stock = stock + ?
-                        WHERE id_producto = ?`,
+                        SET stock = stock + $1
+                        WHERE id_producto = $2`,
                         [item.cantidad, item.id_producto]
                     );
                 }
             }
 
-            await connection.query(
-                `DELETE FROM detalle_ventas WHERE id_venta = ?`,
+            await db.query(
+                `DELETE FROM detalle_ventas WHERE id_venta = $1`,
                 [id]
             );
 
@@ -434,10 +486,10 @@ const ventasController = {
                 nuevoTotal += subtotal;
 
                 if (item.es_manual) {
-                    await connection.query(
+                    await db.query(
                         `INSERT INTO detalle_ventas
                         (id_venta, id_producto, descripcion_manual, es_manual, cantidad, precio_unitario, subtotal, id_categoria)
-                        VALUES (?, NULL, ?, 1, ?, ?, ?, ?)`,
+                        VALUES ($1, NULL, $2, TRUE, $3, $4, $5, $6)`,
                         [
                             id,
                             item.descripcion_manual,
@@ -448,10 +500,10 @@ const ventasController = {
                         ]
                     );
                 } else {
-                    await connection.query(
+                    await db.query(
                         `INSERT INTO detalle_ventas
                         (id_venta, id_producto, cantidad, precio_unitario, subtotal)
-                        VALUES (?, ?, ?, ?, ?)`,
+                        VALUES ($1, $2, $3, $4, $5)`,
                         [
                             id,
                             item.id_producto,
@@ -461,10 +513,10 @@ const ventasController = {
                         ]
                     );
 
-                    await connection.query(
+                    await db.query(
                         `UPDATE productos
-                        SET stock = stock - ?
-                        WHERE id_producto = ?`,
+                        SET stock = stock - $1
+                        WHERE id_producto = $2`,
                         [cantidad, item.id_producto]
                     );
                 }
@@ -480,23 +532,23 @@ const ventasController = {
 
             const total_final = nuevoTotal + recargo_monto;
 
-            await connection.query(
+            await db.query(
                 `UPDATE ventas
                 SET
-                    total_venta = ?,
-                    total_final = ?,
-                    metodo_pago = ?,
-                    monto_efectivo = ?,
-                    monto_transferencia = ?,
-                    monto_tarjeta = ?,
-                    tipo_tarjeta = ?,
-                    recargo_porcentaje = ?,
-                    recargo_monto = ?,
-                    corregida = 1,
-                    motivo_correccion = ?,
+                    total_venta = $1,
+                    total_final = $2,
+                    metodo_pago = $3,
+                    monto_efectivo = $4,
+                    monto_transferencia = $5,
+                    monto_tarjeta = $6,
+                    tipo_tarjeta = $7,
+                    recargo_porcentaje = $8,
+                    recargo_monto = $9,
+                    corregida = TRUE,
+                    motivo_correccion = $10,
                     fecha_correccion = NOW(),
-                    id_usuario_correccion = ?
-                WHERE id_venta = ?`,
+                    id_usuario_correccion = $11
+                WHERE id_venta = $12`,
                 [
                     nuevoTotal,
                     total_final,
@@ -513,27 +565,25 @@ const ventasController = {
                 ]
             );
 
-            await connection.commit();
+            await db.query("COMMIT");
 
-            res.json({
+            return res.json({
                 message: "Venta corregida correctamente",
                 id_venta: id,
                 total_final
             });
 
         } catch (error) {
-            console.error("ERROR CORREGIR:", error); 
-            await connection.rollback();
+            await db.query("ROLLBACK");
 
-            res.status(500).json({
+            console.error("ERROR CORREGIR:", error);
+
+            return res.status(500).json({
                 error: "Error al corregir venta",
                 details: error.message
             });
-
-        } finally {
-            connection.release();
         }
-    },
+    }
 };
 
 module.exports = ventasController;
