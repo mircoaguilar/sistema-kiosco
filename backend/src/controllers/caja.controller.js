@@ -22,10 +22,6 @@ const cajaController = {
     },
 
     abrir: async (req, res) => {
-        console.log("--- Inicio de proceso abrir caja ---");
-        
-        console.log("Cuerpo de la petición:", req.body);
-        console.log("Usuario detectado en token:", req.user);
 
         const { monto_inicial } = req.body;
         const monto = parseFloat(monto_inicial);
@@ -43,7 +39,6 @@ const cajaController = {
         }
 
         try {
-            console.log(`Consultando si existen cajas abiertas para usuario: ${id_usuario}`);
             
             const [abierta] = await db.query(
                 'SELECT 1 FROM sesiones_caja WHERE id_usuario = ? AND estado = \'abierta\'',
@@ -51,21 +46,17 @@ const cajaController = {
             );
 
             if (abierta.length > 0) {
-                console.warn("Intento fallido: El usuario ya tiene una caja abierta.");
                 return res.status(400).json({ msg: "Ya tenés una caja abierta" });
             }
 
-            console.log("Insertando nueva sesión de caja...");
             const [result] = await db.query(
                 'INSERT INTO sesiones_caja (id_usuario, monto_inicial, estado) VALUES (?, ?, \'abierta\')',
                 [id_usuario, monto]
             );
 
-            console.log("Caja abierta exitosamente. ID Sesión:", result.insertId);
             res.json({ message: "Caja abierta", id_sesion: result.insertId });
 
         } catch (error) {
-            console.error("ERROR CRÍTICO EN BASE DE DATOS:", error);
             res.status(500).json({ 
                 error: "Error interno al abrir la caja", 
                 details: error.message 
