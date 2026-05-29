@@ -219,12 +219,12 @@ const ventasController = {
             }
 
             if (hora_desde) {
-                filtros += ` AND TIME(v.fecha_hora) >= $${idx++}`;
+                filtros += ` AND CAST(v.fecha_hora AS time) >= $${idx++}`;
                 params.push(hora_desde);
             }
 
             if (hora_hasta) {
-                filtros += ` AND TIME(v.fecha_hora) <= $${idx++}`;
+                filtros += ` AND CAST(v.fecha_hora AS time) <= $${idx++}`;
                 params.push(hora_hasta);
             }
 

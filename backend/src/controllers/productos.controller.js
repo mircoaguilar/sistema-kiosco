@@ -258,7 +258,7 @@ const productosController = {
         try {
             let condiciones = [];
             let params = [];
-            let paramIndex = 2; // $1 será porcentaje
+            let paramIndex = 2; 
 
             if (id_categoria) {
                 condiciones.push(`id_categoria = $${paramIndex}`);
@@ -278,7 +278,7 @@ const productosController = {
 
             const sql = `
                 UPDATE productos 
-                SET precio_venta = precio_venta * (1 + $1 / 100)
+                SET precio_venta = precio_venta * (1 + ($1::numeric / 100.0))
                 ${where}
             `;
 

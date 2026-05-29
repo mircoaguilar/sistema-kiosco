@@ -238,8 +238,8 @@ const cajaController = {
                 SELECT 
                     fecha_hora,
                     CONCAT('Venta #', id_venta) as descripcion,
-                    'venta' as tipo,
-                    'efectivo' as medio,
+                    'venta'::text as tipo,
+                    'efectivo'::text as medio,
                     monto_efectivo as monto
                 FROM ventas 
                 WHERE id_sesion = $1 
@@ -251,8 +251,8 @@ const cajaController = {
                 SELECT 
                     fecha_hora,
                     CONCAT('Venta #', id_venta) as descripcion,
-                    'venta' as tipo,
-                    'transferencia' as medio,
+                    'venta'::text as tipo,
+                    'transferencia'::text as medio,
                     monto_transferencia as monto
                 FROM ventas 
                 WHERE id_sesion = $1 
@@ -264,8 +264,8 @@ const cajaController = {
                 SELECT 
                     fecha_hora,
                     CONCAT('Venta #', id_venta) as descripcion,
-                    'venta' as tipo,
-                    'tarjeta' as medio,
+                    'venta'::text as tipo,
+                    'tarjeta'::text as medio,
                     (total_final - monto_efectivo - monto_transferencia) as monto
                 FROM ventas 
                 WHERE id_sesion = $1 
@@ -277,8 +277,8 @@ const cajaController = {
                 SELECT 
                     fecha_hora,
                     concepto as descripcion,
-                    tipo,
-                    metodo_pago as medio,
+                    tipo::text as tipo,
+                    metodo_pago::text as medio,
                     monto
                 FROM movimientos_caja 
                 WHERE id_sesion = $1
