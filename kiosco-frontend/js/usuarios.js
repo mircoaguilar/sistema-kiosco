@@ -241,7 +241,9 @@ function filtrarUsuarios() {
             usuario.usuario.toLowerCase().includes(texto);
 
         const coincideRol = !rol || usuario.rol === rol;
-        const coincideEstado = estado === '' || usuario.estado.toString() === estado;
+        const coincideEstado =
+        estado === '' ||
+        usuario.estado.toString() === (estado === '1' ? 'true' : 'false');
 
         return coincideTexto && coincideRol && coincideEstado;
     });
