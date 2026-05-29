@@ -78,8 +78,8 @@ function renderUsuarios(usuarios) {
                 </span>
             </td>
             <td>
-                <span class="badge ${usuario.estado == 1 ? 'bg-success' : 'bg-danger'}">
-                    ${usuario.estado == 1 ? 'Activo' : 'Inactivo'}
+               <span class="badge ${usuario.estado ? 'bg-success' : 'bg-danger'}">
+                    ${usuario.estado ? 'Activo' : 'Inactivo'}
                 </span>
             </td>
             <td>${new Date(usuario.fecha_creacion).toLocaleDateString()}</td>
@@ -89,9 +89,9 @@ function renderUsuarios(usuarios) {
                     <i class="bi bi-pencil-fill"></i>
                 </button>
 
-                <button class="btn btn-sm btn-outline-${usuario.estado == 1 ? 'danger' : 'success'}"
+                <button class="btn btn-sm btn-outline-${usuario.estado ? 'danger' : 'success'}"
                     onclick="confirmarCambioEstado(${usuario.id_usuario}, ${usuario.estado})">
-                    <i class="bi ${usuario.estado == 1 ? 'bi-person-x-fill' : 'bi-person-check-fill'}"></i>
+                    <i class="bi ${usuario.estado ? 'bi-person-x-fill' : 'bi-person-check-fill'}"></i>
                 </button>
             </td>
         </tr>
