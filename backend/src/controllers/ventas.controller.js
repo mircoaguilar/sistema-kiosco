@@ -461,7 +461,6 @@ const ventasController = {
                 ]
             );
 
-            // devolver stock de items actuales
             for (const item of detallesActuales) {
                 if (item.id_producto) {
                     await db.query(
