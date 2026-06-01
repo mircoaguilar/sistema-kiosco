@@ -670,10 +670,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 function formatearFecha(fecha) {
     if (!fecha) return '';
 
-    const limpia = fecha.replace('T', ' ').replace('.000Z', '');
-
-    const [fechaParte, horaParte] = limpia.split(' ');
-    const [anio, mes, dia] = fechaParte.split('-');
-
-    return `${dia}/${mes}/${anio}, ${horaParte}`;
+    return new Date(fecha).toLocaleString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
 }

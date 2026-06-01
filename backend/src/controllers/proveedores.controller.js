@@ -4,12 +4,20 @@ const proveedoresController = {
 
     obtenerTodos: async (req, res) => {
         try {
-            const [rows] = await db.query(
-                'SELECT * FROM proveedores WHERE activo = 1 ORDER BY nombre ASC'
+            const result = await db.query(
+                `SELECT * 
+                 FROM proveedores 
+                 WHERE activo = TRUE 
+                 ORDER BY nombre ASC`
             );
-            res.json(rows);
+
+            return res.json(result.rows);
+
         } catch (error) {
-            res.status(500).json({ error: "Error al obtener proveedores", details: error.message });
+            return res.status(500).json({
+                error: "Error al obtener proveedores",
+                details: error.message
+            });
         }
     },
 
@@ -17,19 +25,26 @@ const proveedoresController = {
         const { id } = req.params;
 
         try {
-            const [rows] = await db.query(
-                'SELECT * FROM proveedores WHERE id_proveedor = ?',
+            const result = await db.query(
+                `SELECT * 
+                 FROM proveedores 
+                 WHERE id_proveedor = $1`,
                 [id]
             );
 
-            if (rows.length === 0) {
-                return res.status(404).json({ message: "Proveedor no encontrado" });
+            if (result.rows.length === 0) {
+                return res.status(404).json({
+                    message: "Proveedor no encontrado"
+                });
             }
 
-            res.json(rows[0]);
+            return res.json(result.rows[0]);
 
         } catch (error) {
-            res.status(500).json({ error: "Error al buscar proveedor", details: error.message });
+            return res.status(500).json({
+                error: "Error al buscar proveedor",
+                details: error.message
+            });
         }
     },
 
@@ -43,43 +58,59 @@ const proveedoresController = {
             direccion = direccion?.trim();
 
             if (!nombre || nombre.length < 3) {
-                return res.status(400).json({ error: "El nombre es obligatorio (mínimo 3 caracteres)" });
+                return res.status(400).json({
+                    error: "El nombre es obligatorio (mínimo 3 caracteres)"
+                });
             }
 
             if (telefono && !/^[0-9]+$/.test(telefono)) {
-                return res.status(400).json({ error: "El teléfono debe contener solo números" });
+                return res.status(400).json({
+                    error: "El teléfono debe contener solo números"
+                });
             }
 
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                return res.status(400).json({ error: "Email inválido" });
+                return res.status(400).json({
+                    error: "Email inválido"
+                });
             }
 
-            const [existe] = await db.query(
-                'SELECT id_proveedor FROM proveedores WHERE nombre = ? AND activo = 1',
+            const existe = await db.query(
+                `SELECT id_proveedor 
+                FROM proveedores 
+                WHERE nombre = $1 AND activo = TRUE`,
                 [nombre]
             );
 
-            if (existe.length > 0) {
-                return res.status(400).json({ error: "Ya existe un proveedor con ese nombre" });
+            if (existe.rows.length > 0) {
+                return res.status(400).json({
+                    error: "Ya existe un proveedor con ese nombre"
+                });
             }
 
-            const sql = `
-                INSERT INTO proveedores 
+            const result = await db.query(
+                `INSERT INTO proveedores 
                 (nombre, telefono, email, direccion) 
-                VALUES (?, ?, ?, ?)
-            `;
+                VALUES ($1, $2, $3, $4)
+                RETURNING id_proveedor`,
+                [
+                    nombre,
+                    telefono || null,
+                    email || null,
+                    direccion || null
+                ]
+            );
 
-            const [result] = await db.query(sql, [
-                nombre,
-                telefono || null,
-                email || null,
-                direccion || null
-            ]);
-
-            res.json({ message: "Proveedor creado correctamente", id: result.insertId });
+            return res.json({
+                message: "Proveedor creado correctamente",
+                id: result.rows[0].id_proveedor
+            });
 
         } catch (error) {
-            res.status(500).json({ error: "Error al crear proveedor", details: error.message });
+            return res.status(500).json({
+                error: "Error al crear proveedor",
+                details: error.message
+            });
         }
     },
 
@@ -94,44 +125,63 @@ const proveedoresController = {
             direccion = direccion?.trim();
 
             if (!nombre || nombre.length < 3) {
-                return res.status(400).json({ error: "El nombre es obligatorio (mínimo 3 caracteres)" });
+                return res.status(400).json({
+                    error: "El nombre es obligatorio (mínimo 3 caracteres)"
+                });
             }
 
             if (telefono && !/^[0-9]+$/.test(telefono)) {
-                return res.status(400).json({ error: "El teléfono debe contener solo números" });
+                return res.status(400).json({
+                    error: "El teléfono debe contener solo números"
+                });
             }
 
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                return res.status(400).json({ error: "Email inválido" });
+                return res.status(400).json({
+                    error: "Email inválido"
+                });
             }
 
-            const [existe] = await db.query(
-                'SELECT id_proveedor FROM proveedores WHERE nombre = ? AND id_proveedor != ? AND activo = 1',
+            const existe = await db.query(
+                `SELECT id_proveedor 
+                FROM proveedores 
+                WHERE nombre = $1 
+                AND id_proveedor != $2 
+                AND activo = TRUE`,
                 [nombre, id]
             );
 
-            if (existe.length > 0) {
-                return res.status(400).json({ error: "Ya existe otro proveedor con ese nombre" });
+            if (existe.rows.length > 0) {
+                return res.status(400).json({
+                    error: "Ya existe otro proveedor con ese nombre"
+                });
             }
 
-            const sql = `
-                UPDATE proveedores 
-                SET nombre=?, telefono=?, email=?, direccion=? 
-                WHERE id_proveedor=?
-            `;
+            await db.query(
+                `UPDATE proveedores 
+                SET nombre = $1,
+                    telefono = $2,
+                    email = $3,
+                    direccion = $4
+                WHERE id_proveedor = $5`,
+                [
+                    nombre,
+                    telefono || null,
+                    email || null,
+                    direccion || null,
+                    id
+                ]
+            );
 
-            await db.query(sql, [
-                nombre,
-                telefono || null,
-                email || null,
-                direccion || null,
-                id
-            ]);
-
-            res.json({ message: "Proveedor actualizado correctamente" });
+            return res.json({
+                message: "Proveedor actualizado correctamente"
+            });
 
         } catch (error) {
-            res.status(500).json({ error: "Error al actualizar proveedor", details: error.message });
+            return res.status(500).json({
+                error: "Error al actualizar proveedor",
+                details: error.message
+            });
         }
     },
 
@@ -140,14 +190,21 @@ const proveedoresController = {
 
         try {
             await db.query(
-                'UPDATE proveedores SET activo = 0 WHERE id_proveedor = ?',
+                `UPDATE proveedores 
+                SET activo = FALSE 
+                WHERE id_proveedor = $1`,
                 [id]
             );
 
-            res.json({ message: "Proveedor eliminado correctamente" });
+            return res.json({
+                message: "Proveedor eliminado correctamente"
+            });
 
         } catch (error) {
-            res.status(500).json({ error: "Error al eliminar proveedor", details: error.message });
+            return res.status(500).json({
+                error: "Error al eliminar proveedor",
+                details: error.message
+            });
         }
     }
 };
