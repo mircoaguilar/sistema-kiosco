@@ -30,7 +30,7 @@ async function imprimirTicket(venta) {
         printer.println("ELI MINI MARKET");
 
         printer.setTextNormal();
-        printer.println("Barrio hipólito Yrigoyen Mzn 62 casa 15");
+        printer.println("Barrio hipólito Yrigoyen Mz 62 casa 15");
         printer.println("Formosa, Argentina");
 
         printer.drawLine();
