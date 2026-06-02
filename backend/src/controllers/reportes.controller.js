@@ -14,11 +14,9 @@ const reportesController = {
             } = req.query;
 
             let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
-            let paramsProductos = [];
+            let filtrosCantidad = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
 
-            let filtrosCantidad = `
-                WHERE COALESCE(v.estado, 'activa') = 'activa'
-            `;
+            let paramsProductos = [];
             let paramsCantidad = [];
 
             let fechaInicio = null;
@@ -33,52 +31,53 @@ const reportesController = {
             }
 
             if (fechaInicio && fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora BETWEEN ? AND ?`;
-                filtrosCantidad += ` AND v.fecha_hora BETWEEN ? AND ?`;
+                filtrosProductos += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                filtrosCantidad += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+
                 paramsProductos.push(fechaInicio, fechaFin);
                 paramsCantidad.push(fechaInicio, fechaFin);
 
             } else if (fechaInicio) {
-                filtrosProductos += ` AND v.fecha_hora >= ?`;
-                filtrosCantidad += ` AND v.fecha_hora >= ?`;
+                filtrosProductos += ` AND v.fecha_hora >= $1`;
+                filtrosCantidad += ` AND v.fecha_hora >= $1`;
+
                 paramsProductos.push(fechaInicio);
                 paramsCantidad.push(fechaInicio);
 
             } else if (fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora <= ?`;
-                filtrosCantidad += ` AND v.fecha_hora <= ?`;
+                filtrosProductos += ` AND v.fecha_hora <= $1`;
+                filtrosCantidad += ` AND v.fecha_hora <= $1`;
+
                 paramsProductos.push(fechaFin);
                 paramsCantidad.push(fechaFin);
 
             } else {
-                filtrosProductos += ` AND DATE(v.fecha_hora) = CURDATE()`;
-                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURDATE()`;
+                filtrosProductos += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
             }
 
             if (categoria) {
-                filtrosProductos += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
-                filtrosCantidad += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
-                paramsProductos.push(categoria, categoria);
-                paramsCantidad.push(categoria, categoria);
+                filtrosProductos += ` AND (p.id_categoria = $${paramsProductos.length + 1} OR dv.id_categoria = $${paramsProductos.length + 1})`;
+                filtrosCantidad += ` AND (p.id_categoria = $${paramsCantidad.length + 1} OR dv.id_categoria = $${paramsCantidad.length + 1})`;
+
+                paramsProductos.push(categoria);
+                paramsCantidad.push(categoria);
             }
 
             if (proveedor) {
-                filtrosProductos += ` AND p.id_proveedor = ?`;
-                filtrosCantidad += ` AND p.id_proveedor = ?`;
+                filtrosProductos += ` AND p.id_proveedor = $${paramsProductos.length + 1}`;
+                filtrosCantidad += ` AND p.id_proveedor = $${paramsCantidad.length + 1}`;
+
                 paramsProductos.push(proveedor);
                 paramsCantidad.push(proveedor);
             }
 
-            const [rows] = await db.query(`
+            const productosResult = await db.query(`
                 SELECT 
                     COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
                     MAX(c.nombre_categoria) AS categoria,
                     MAX(pr.nombre) AS proveedor,
                     SUM(dv.cantidad) AS cantidad,
-                    /* 
-                    Calculamos el subtotal con recargo:
-                    Multiplicamos el subtotal del detalle por (1 + porcentaje_recargo / 100)
-                    */
                     SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)) AS total
                 FROM detalle_ventas dv
                 LEFT JOIN productos p ON dv.id_producto = p.id_producto
@@ -93,11 +92,13 @@ const reportesController = {
                 ORDER BY total DESC
             `, paramsProductos);
 
+            const rows = productosResult.rows;
+
             const totalGeneral = rows.reduce((acc, item) => {
                 return acc + parseFloat(item.total);
             }, 0);
 
-            const [ventasCount] = await db.query(`
+            const ventasCountResult = await db.query(`
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
                 JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
@@ -105,9 +106,9 @@ const reportesController = {
                 ${filtrosCantidad}
             `, paramsCantidad);
 
-            const cantidadVentas = ventasCount[0].total_ventas;
+            const cantidadVentas = ventasCountResult.rows[0].total_ventas;
 
-            res.json({
+            return res.json({
                 resumen: {
                     total_dia: totalGeneral,
                     cantidad_ventas: cantidadVentas
@@ -116,7 +117,7 @@ const reportesController = {
             });
 
         } catch (error) {
-            res.status(500).json({
+            return res.status(500).json({
                 error: "Error al generar reporte",
                 details: error.message
             });
@@ -127,28 +128,31 @@ const reportesController = {
         try {
             const { desde, hasta, categoria } = req.query;
 
-            let filtros = `WHERE 1=1`;
+            let filtros = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
             let params = [];
 
             if (desde && hasta) {
-                filtros += ` AND DATE(v.fecha_hora) BETWEEN ? AND ?`;
+                filtros += ` AND DATE(v.fecha_hora) BETWEEN $1 AND $2`;
                 params.push(desde, hasta);
+
             } else if (desde) {
-                filtros += ` AND DATE(v.fecha_hora) >= ?`;
+                filtros += ` AND DATE(v.fecha_hora) >= $1`;
                 params.push(desde);
+
             } else if (hasta) {
-                filtros += ` AND DATE(v.fecha_hora) <= ?`;
+                filtros += ` AND DATE(v.fecha_hora) <= $1`;
                 params.push(hasta);
+
             } else {
-                filtros += ` AND DATE(v.fecha_hora) = CURDATE()`;
+                filtros += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
             }
 
             if (categoria) {
-                filtros += ` AND (p.id_categoria = ? OR dv.id_categoria = ?)`;
-                params.push(categoria, categoria);
+                filtros += ` AND (p.id_categoria = $${params.length + 1} OR dv.id_categoria = $${params.length + 1})`;
+                params.push(categoria);
             }
 
-            const [rows] = await db.query(`
+            const result = await db.query(`
                 SELECT 
                     COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
                     SUM(dv.cantidad) AS cantidad
@@ -162,16 +166,15 @@ const reportesController = {
                 LIMIT 10
             `, params);
 
-            res.json(rows);
+            return res.json(result.rows);
 
         } catch (error) {
-            res.status(500).json({
+            return res.status(500).json({
                 error: "Error en top productos",
                 details: error.message
             });
         }
     }
-
 };
 
 module.exports = reportesController;
