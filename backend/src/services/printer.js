@@ -13,7 +13,6 @@ async function imprimirTicket(venta) {
         printer.alignCenter();
         printer.println("ELI MINI MARKET");
 
-        // Dejamos tu versión corregida sin las marcas de Git
         printer.setTextNormal();
         printer.println("Barrio hipólito Yrigoyen Mz 62 casa 15");
         printer.println("Formosa, Argentina");
