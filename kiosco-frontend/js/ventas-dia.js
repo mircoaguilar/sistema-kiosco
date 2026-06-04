@@ -109,16 +109,25 @@ function renderTabla(productos) {
             <td>${p.categoria || '-'}</td>
             <td>${p.proveedor || '-'}</td>
             <td>${parseFloat(p.cantidad)}</td>
-            <td class="fw-bold text-success">$${parseFloat(p.total).toFixed(2)}</td>
+            <td class="fw-bold text-success">
+                $${formatearMoneda(p.total)}
+            </td>
         </tr>
     `).join('');
+}
+
+function formatearMoneda(valor) {
+    return Number(valor).toLocaleString('es-AR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 function renderResumen(resumen) {
     if (!resumen) return;
 
     totalDiaHTML.innerText =
-        `$${parseFloat(resumen.total_dia || 0).toFixed(2)}`;
+        `$${formatearMoneda(resumen.total_dia || 0)}`;
 
     const ventasHTML = document.getElementById('cantidad-ventas');
     if (ventasHTML) {
@@ -126,14 +135,15 @@ function renderResumen(resumen) {
     }
 
     document.getElementById('total-efectivo').innerText =
-        `$${parseFloat(resumen.total_efectivo || 0).toFixed(2)}`;
+        `$${formatearMoneda(resumen.total_efectivo || 0)}`;
 
     document.getElementById('total-transferencia').innerText =
-        `$${parseFloat(resumen.total_transferencia || 0).toFixed(2)}`;
+        `$${formatearMoneda(resumen.total_transferencia || 0)}`;
 
     document.getElementById('total-tarjeta').innerText =
-        `$${parseFloat(resumen.total_tarjeta || 0).toFixed(2)}`;
+        `$${formatearMoneda(resumen.total_tarjeta || 0)}`;
 }
+
 
 document.getElementById('btn-limpiar').addEventListener('click', () => {
     document.getElementById('filtro-categoria').value = '';
