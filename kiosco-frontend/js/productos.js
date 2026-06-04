@@ -229,8 +229,6 @@ formProd.addEventListener('submit', async (e) => {
 });
 
 window.prepararEdicion = async (id) => {
-    console.log(id);
-    console.log(productos[0]);
     const p = productos.find(x => Number(x.id_producto) === Number(id));
     if (!p) return;
     await cargarCategorias();

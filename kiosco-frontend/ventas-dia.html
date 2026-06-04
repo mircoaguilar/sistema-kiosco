@@ -114,9 +114,9 @@
 
 <div class="container-fluid px-4">
 
-    <div class="row mb-4">
+    <div class="row mb-4 g-3">
 
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <div class="card shadow-sm card-resumen">
                 <div class="card-body">
                     <h6 class="text-muted">Total del Día</h6>
@@ -125,7 +125,34 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Efectivo</h6>
+                    <h3 class="fw-bold text-success" id="total-efectivo">$0.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Transferencia</h6>
+                    <h3 class="fw-bold text-primary" id="total-transferencia">$0.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Tarjeta</h6>
+                    <h3 class="fw-bold text-warning" id="total-tarjeta">$0.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Cantidad de Ventas</h6>
@@ -133,7 +160,13 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="alert alert-light border py-2 mb-3">
+        <small class="text-muted">
+            Los medios de pago muestran el total cobrado según el rango de fecha y hora seleccionado.
+        Los filtros de categoría y proveedor sólo afectan el detalle de productos.
+        </small>
     </div>
 
     <div class="card shadow-sm mb-3">

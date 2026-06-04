@@ -94,10 +94,6 @@ const reportesController = {
 
             const rows = productosResult.rows;
 
-            const totalGeneral = rows.reduce((acc, item) => {
-                return acc + parseFloat(item.total);
-            }, 0);
-
             const ventasCountResult = await db.query(`
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
@@ -108,10 +104,64 @@ const reportesController = {
 
             const cantidadVentas = ventasCountResult.rows[0].total_ventas;
 
+            let filtrosMediosPago = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+
+            let paramsMediosPago = [];
+
+            if (fechaInicio && fechaFin) {
+                filtrosMediosPago += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                paramsMediosPago.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosMediosPago += ` AND v.fecha_hora >= $1`;
+                paramsMediosPago.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosMediosPago += ` AND v.fecha_hora <= $1`;
+                paramsMediosPago.push(fechaFin);
+
+            } else {
+                filtrosMediosPago += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            }
+
+            const mediosPagoResult = await db.query(`
+                SELECT
+                    COALESCE(SUM(v.monto_efectivo), 0) AS total_efectivo,
+                    COALESCE(SUM(v.monto_transferencia), 0) AS total_transferencia,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN v.monto_tarjeta > 0
+                                THEN v.monto_tarjeta + COALESCE(v.recargo_monto, 0)
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS total_tarjeta
+                FROM ventas v
+                ${filtrosMediosPago}
+            `, paramsMediosPago);
+
+            const mediosPago = mediosPagoResult.rows[0];
+
+            const totalDiaResult = await db.query(`
+                SELECT
+                    COALESCE(SUM(v.total_final), 0) AS total_dia
+                FROM ventas v
+                ${filtrosMediosPago}
+            `, paramsMediosPago);
+
+            const totalGeneral = totalDiaResult.rows[0].total_dia;
+
             return res.json({
                 resumen: {
                     total_dia: totalGeneral,
-                    cantidad_ventas: cantidadVentas
+                    cantidad_ventas: cantidadVentas,
+                    total_efectivo: mediosPago.total_efectivo,
+                    total_transferencia: mediosPago.total_transferencia,
+                    total_tarjeta: mediosPago.total_tarjeta
                 },
                 productos: rows
             });
