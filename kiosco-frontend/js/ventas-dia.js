@@ -118,7 +118,7 @@ function renderTabla(productos) {
 
 function formatearMoneda(valor) {
     return Number(valor).toLocaleString('es-AR', {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2
     });
 }
