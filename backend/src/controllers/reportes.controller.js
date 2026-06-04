@@ -94,10 +94,6 @@ const reportesController = {
 
             const rows = productosResult.rows;
 
-            const totalGeneral = rows.reduce((acc, item) => {
-                return acc + parseFloat(item.total);
-            }, 0);
-
             const ventasCountResult = await db.query(`
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
                 FROM ventas v
@@ -149,6 +145,15 @@ const reportesController = {
             `, paramsMediosPago);
 
             const mediosPago = mediosPagoResult.rows[0];
+
+            const totalDiaResult = await db.query(`
+                SELECT
+                    COALESCE(SUM(v.total_final), 0) AS total_dia
+                FROM ventas v
+                ${filtrosMediosPago}
+            `, paramsMediosPago);
+
+            const totalGeneral = totalDiaResult.rows[0].total_dia;
 
             return res.json({
                 resumen: {
