@@ -134,7 +134,16 @@ const reportesController = {
                 SELECT
                     COALESCE(SUM(v.monto_efectivo), 0) AS total_efectivo,
                     COALESCE(SUM(v.monto_transferencia), 0) AS total_transferencia,
-                    COALESCE(SUM(v.monto_tarjeta), 0) AS total_tarjeta
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN v.monto_tarjeta > 0
+                                THEN v.monto_tarjeta + COALESCE(v.recargo_monto, 0)
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS total_tarjeta
                 FROM ventas v
                 ${filtrosMediosPago}
             `, paramsMediosPago);
