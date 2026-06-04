@@ -117,12 +117,22 @@ function renderTabla(productos) {
 function renderResumen(resumen) {
     if (!resumen) return;
 
-    totalDiaHTML.innerText = `$${parseFloat(resumen.total_dia).toFixed(2)}`;
+    totalDiaHTML.innerText =
+        `$${parseFloat(resumen.total_dia || 0).toFixed(2)}`;
 
     const ventasHTML = document.getElementById('cantidad-ventas');
     if (ventasHTML) {
         ventasHTML.innerText = resumen.cantidad_ventas || 0;
     }
+
+    document.getElementById('total-efectivo').innerText =
+        `$${parseFloat(resumen.total_efectivo || 0).toFixed(2)}`;
+
+    document.getElementById('total-transferencia').innerText =
+        `$${parseFloat(resumen.total_transferencia || 0).toFixed(2)}`;
+
+    document.getElementById('total-tarjeta').innerText =
+        `$${parseFloat(resumen.total_tarjeta || 0).toFixed(2)}`;
 }
 
 document.getElementById('btn-limpiar').addEventListener('click', () => {
