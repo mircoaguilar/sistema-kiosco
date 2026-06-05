@@ -33,7 +33,7 @@ const reportesController = {
             }
 
             if (fechaInicio && fechaFin) {
-                const queryRango = ` AND v.fecha_hora BETWEEN $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires' AND $2::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                const queryRango = ` AND v.fecha_hora - INTERVAL '3 hours' BETWEEN $1::timestamp AND $2::timestamp`;
                 filtrosProductos += queryRango;
                 filtrosCantidad += queryRango;
                 filtrosMediosPago += queryRango;
@@ -43,7 +43,7 @@ const reportesController = {
                 paramsMediosPago.push(fechaInicio, fechaFin);
 
             } else if (fechaInicio) {
-                const queryDesde = ` AND v.fecha_hora >= $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                const queryDesde = ` AND v.fecha_hora - INTERVAL '3 hours' >= $1::timestamp`;
                 filtrosProductos += queryDesde;
                 filtrosCantidad += queryDesde;
                 filtrosMediosPago += queryDesde;
@@ -53,7 +53,7 @@ const reportesController = {
                 paramsMediosPago.push(fechaInicio);
 
             } else if (fechaFin) {
-                const queryHasta = ` AND v.fecha_hora <= $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                const queryHasta = ` AND v.fecha_hora - INTERVAL '3 hours' <= $1::timestamp`;
                 filtrosProductos += queryHasta;
                 filtrosCantidad += queryHasta;
                 filtrosMediosPago += queryHasta;
@@ -63,7 +63,7 @@ const reportesController = {
                 paramsMediosPago.push(fechaFin);
 
             } else {
-                const queryDiaActual = ` AND (v.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Argentina/Buenos_Aires')::date`;
+                const queryDiaActual = ` AND DATE(v.fecha_hora - INTERVAL '3 hours') = DATE(CURRENT_TIMESTAMP - INTERVAL '3 hours')`;
                 filtrosProductos += queryDiaActual;
                 filtrosCantidad += queryDiaActual;
                 filtrosMediosPago += queryDiaActual;
