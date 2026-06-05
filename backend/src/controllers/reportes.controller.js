@@ -94,9 +94,15 @@ const reportesController = {
 
             const rows = productosResult.rows;
 
-            const totalGeneral = rows.reduce((acc, item) => {
-                return acc + parseFloat(item.total || 0);
-            }, 0);
+            const totalGeneralResult = await db.query(`
+                SELECT COALESCE(SUM(v.total_final), 0) AS total
+                FROM ventas v
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                ${filtrosCantidad}
+            `, paramsCantidad);
+
+            const totalGeneral = totalGeneralResult.rows[0].total;
 
             const ventasCountResult = await db.query(`
                 SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
