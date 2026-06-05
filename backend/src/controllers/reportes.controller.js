@@ -15,9 +15,11 @@ const reportesController = {
 
             let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
             let filtrosCantidad = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
+            let filtrosMediosPago = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
 
             let paramsProductos = [];
             let paramsCantidad = [];
+            let paramsMediosPago = [];
 
             let fechaInicio = null;
             let fechaFin = null;
@@ -31,29 +33,40 @@ const reportesController = {
             }
 
             if (fechaInicio && fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora BETWEEN $1 AND $2`;
-                filtrosCantidad += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                const queryRango = ` AND v.fecha_hora BETWEEN $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires' AND $2::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                filtrosProductos += queryRango;
+                filtrosCantidad += queryRango;
+                filtrosMediosPago += queryRango;
 
                 paramsProductos.push(fechaInicio, fechaFin);
                 paramsCantidad.push(fechaInicio, fechaFin);
+                paramsMediosPago.push(fechaInicio, fechaFin);
 
             } else if (fechaInicio) {
-                filtrosProductos += ` AND v.fecha_hora >= $1`;
-                filtrosCantidad += ` AND v.fecha_hora >= $1`;
+                const queryDesde = ` AND v.fecha_hora >= $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                filtrosProductos += queryDesde;
+                filtrosCantidad += queryDesde;
+                filtrosMediosPago += queryDesde;
 
                 paramsProductos.push(fechaInicio);
                 paramsCantidad.push(fechaInicio);
+                paramsMediosPago.push(fechaInicio);
 
             } else if (fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora <= $1`;
-                filtrosCantidad += ` AND v.fecha_hora <= $1`;
+                const queryHasta = ` AND v.fecha_hora <= $1::timestamp AT TIME ZONE 'America/Argentina/Buenos_Aires'`;
+                filtrosProductos += queryHasta;
+                filtrosCantidad += queryHasta;
+                filtrosMediosPago += queryHasta;
 
                 paramsProductos.push(fechaFin);
                 paramsCantidad.push(fechaFin);
+                paramsMediosPago.push(fechaFin);
 
             } else {
-                filtrosProductos += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
-                filtrosCantidad += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
+                const queryDiaActual = ` AND (v.fecha_hora AT TIME ZONE 'America/Argentina/Buenos_Aires')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Argentina/Buenos_Aires')::date`;
+                filtrosProductos += queryDiaActual;
+                filtrosCantidad += queryDiaActual;
+                filtrosMediosPago += queryDiaActual;
             }
 
             const productosResult = await db.query(`
@@ -88,28 +101,6 @@ const reportesController = {
 
             const cantidadVentas = ventasCountResult.rows[0].total_ventas;
 
-            let filtrosMediosPago = `
-                WHERE COALESCE(v.estado, 'activa') = 'activa'
-            `;
-
-            let paramsMediosPago = [];
-
-            if (fechaInicio && fechaFin) {
-                filtrosMediosPago += ` AND v.fecha_hora BETWEEN $1 AND $2`;
-                paramsMediosPago.push(fechaInicio, fechaFin);
-
-            } else if (fechaInicio) {
-                filtrosMediosPago += ` AND v.fecha_hora >= $1`;
-                paramsMediosPago.push(fechaInicio);
-
-            } else if (fechaFin) {
-                filtrosMediosPago += ` AND v.fecha_hora <= $1`;
-                paramsMediosPago.push(fechaFin);
-
-            } else {
-                filtrosMediosPago += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
-            }
-
             const mediosPagoResult = await db.query(`
                 SELECT
                     COALESCE(SUM(v.monto_efectivo), 0) AS total_efectivo,
@@ -134,8 +125,8 @@ const reportesController = {
                 SELECT
                     COALESCE(SUM(v.total_final), 0) AS total_dia
                 FROM ventas v
-                ${filtrosCantidad}
-            `, paramsCantidad);
+                ${filtrosMediosPago}
+            `, paramsMediosPago);
 
             const totalGeneral = totalDiaResult.rows[0].total_dia;
 
