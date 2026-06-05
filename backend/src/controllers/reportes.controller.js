@@ -52,24 +52,8 @@ const reportesController = {
                 paramsCantidad.push(fechaFin);
 
             } else {
-                filtrosProductos += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
-                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
-            }
-
-            if (categoria) {
-                filtrosProductos += ` AND (p.id_categoria = $${paramsProductos.length + 1} OR dv.id_categoria = $${paramsProductos.length + 1})`;
-                filtrosCantidad += ` AND (p.id_categoria = $${paramsCantidad.length + 1} OR dv.id_categoria = $${paramsCantidad.length + 1})`;
-
-                paramsProductos.push(categoria);
-                paramsCantidad.push(categoria);
-            }
-
-            if (proveedor) {
-                filtrosProductos += ` AND p.id_proveedor = $${paramsProductos.length + 1}`;
-                filtrosCantidad += ` AND p.id_proveedor = $${paramsCantidad.length + 1}`;
-
-                paramsProductos.push(proveedor);
-                paramsCantidad.push(proveedor);
+                filtrosProductos += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
+                filtrosCantidad += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
             }
 
             const productosResult = await db.query(`
@@ -123,7 +107,7 @@ const reportesController = {
                 paramsMediosPago.push(fechaFin);
 
             } else {
-                filtrosMediosPago += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosMediosPago += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
             }
 
             const mediosPagoResult = await db.query(`
@@ -150,8 +134,6 @@ const reportesController = {
                 SELECT
                     COALESCE(SUM(v.total_final), 0) AS total_dia
                 FROM ventas v
-                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
-                LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 ${filtrosCantidad}
             `, paramsCantidad);
 
@@ -196,7 +178,7 @@ const reportesController = {
                 params.push(hasta);
 
             } else {
-                filtros += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosMediosPago += ` AND v.fecha_hora >= CURRENT_DATE AND v.fecha_hora < CURRENT_DATE + INTERVAL '1 day'`;
             }
 
             if (categoria) {
