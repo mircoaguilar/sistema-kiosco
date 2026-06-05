@@ -13,27 +13,119 @@ const reportesController = {
                 hora_hasta
             } = req.query;
 
-            // 1. Configuración de Fechas Base (Común para todo)
-            let fechaInicio = desde ? `${desde} ${hora_desde || '00:00:00'}` : null;
-            let fechaFin = hasta ? `${hasta} ${hora_hasta || '23:59:59'}` : null;
+            let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
+            let filtrosCantidad = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
 
-            let filtrosBase = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
-            let paramsBase = [];
+            let paramsProductos = [];
+            let paramsCantidad = [];
 
-            if (fechaInicio && fechaFin) {
-                filtrosBase += ` AND v.fecha_hora BETWEEN $1 AND $2`;
-                paramsBase.push(fechaInicio, fechaFin);
-            } else if (fechaInicio) {
-                filtrosBase += ` AND v.fecha_hora >= $1`;
-                paramsBase.push(fechaInicio);
-            } else if (fechaFin) {
-                filtrosBase += ` AND v.fecha_hora <= $1`;
-                paramsBase.push(fechaFin);
-            } else {
-                filtrosBase += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            let fechaInicio = null;
+            let fechaFin = null;
+
+            if (desde) {
+                fechaInicio = `${desde} ${hora_desde || '00:00:00'}`;
             }
 
-            // 2. QUERY 1: Obtener Medios de Pago y Totales (No deben afectarse por filtros de productos)
+            if (hasta) {
+                fechaFin = `${hasta} ${hora_hasta || '23:59:59'}`;
+            }
+
+            if (fechaInicio && fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                filtrosCantidad += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+
+                paramsProductos.push(fechaInicio, fechaFin);
+                paramsCantidad.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosProductos += ` AND v.fecha_hora >= $1`;
+                filtrosCantidad += ` AND v.fecha_hora >= $1`;
+
+                paramsProductos.push(fechaInicio);
+                paramsCantidad.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosProductos += ` AND v.fecha_hora <= $1`;
+                filtrosCantidad += ` AND v.fecha_hora <= $1`;
+
+                paramsProductos.push(fechaFin);
+                paramsCantidad.push(fechaFin);
+
+            } else {
+                filtrosProductos += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            }
+
+            if (categoria) {
+                filtrosProductos += ` AND (p.id_categoria = $${paramsProductos.length + 1} OR dv.id_categoria = $${paramsProductos.length + 1})`;
+                filtrosCantidad += ` AND (p.id_categoria = $${paramsCantidad.length + 1} OR dv.id_categoria = $${paramsCantidad.length + 1})`;
+
+                paramsProductos.push(categoria);
+                paramsCantidad.push(categoria);
+            }
+
+            if (proveedor) {
+                filtrosProductos += ` AND p.id_proveedor = $${paramsProductos.length + 1}`;
+                filtrosCantidad += ` AND p.id_proveedor = $${paramsCantidad.length + 1}`;
+
+                paramsProductos.push(proveedor);
+                paramsCantidad.push(proveedor);
+            }
+
+            const productosResult = await db.query(`
+                SELECT 
+                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
+                    MAX(c.nombre_categoria) AS categoria,
+                    MAX(pr.nombre) AS proveedor,
+                    SUM(dv.cantidad) AS cantidad,
+                    SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)) AS total
+                FROM detalle_ventas dv
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                LEFT JOIN categorias c 
+                    ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
+                LEFT JOIN proveedores pr 
+                    ON p.id_proveedor = pr.id_proveedor
+                JOIN ventas v 
+                    ON dv.id_venta = v.id_venta
+                ${filtrosProductos}
+                GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
+                ORDER BY total DESC
+            `, paramsProductos);
+
+            const rows = productosResult.rows;
+
+            const ventasCountResult = await db.query(`
+                SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
+                FROM ventas v
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                ${filtrosCantidad}
+            `, paramsCantidad);
+
+            const cantidadVentas = ventasCountResult.rows[0].total_ventas;
+
+            let filtrosMediosPago = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+
+            let paramsMediosPago = [];
+
+            if (fechaInicio && fechaFin) {
+                filtrosMediosPago += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                paramsMediosPago.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosMediosPago += ` AND v.fecha_hora >= $1`;
+                paramsMediosPago.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosMediosPago += ` AND v.fecha_hora <= $1`;
+                paramsMediosPago.push(fechaFin);
+
+            } else {
+                filtrosMediosPago += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            }
+
             const mediosPagoResult = await db.query(`
                 SELECT
                     COALESCE(SUM(v.monto_efectivo), 0) AS total_efectivo,
@@ -47,84 +139,33 @@ const reportesController = {
                             END
                         ),
                         0
-                    ) AS total_tarjeta,
+                    ) AS total_tarjeta
+                FROM ventas v
+                ${filtrosMediosPago}
+            `, paramsMediosPago);
+
+            const mediosPago = mediosPagoResult.rows[0];
+
+            const totalDiaResult = await db.query(`
+                SELECT
                     COALESCE(SUM(v.total_final), 0) AS total_dia
                 FROM ventas v
-                ${filtrosBase}
-            `, paramsBase);
-
-            const resumenMedios = mediosPagoResult.rows[0];
-
-            // 3. QUERY 2: Cantidad de Ventas Únicas
-            // Modificamos para que no haga JOIN con productos a menos que se filtre por ellos, 
-            // evitando duplicación de registros en el COUNT.
-            let filtrosCantidad = filtrosBase;
-            let paramsCantidad = [...paramsBase];
-
-            let joinProductosParaConteo = "";
-            if (categoria || proveedor) {
-                joinProductosParaConteo = `
-                    JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
-                    LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                `;
-                if (categoria) {
-                    filtrosCantidad += ` AND (p.id_categoria = $${paramsCantidad.length + 1} OR dv.id_categoria = $${paramsCantidad.length + 1})`;
-                    paramsCantidad.push(categoria);
-                }
-                if (proveedor) {
-                    filtrosCantidad += ` AND p.id_proveedor = $${paramsCantidad.length + 1}`;
-                    paramsCantidad.push(proveedor);
-                }
-            }
-
-            const ventasCountResult = await db.query(`
-                SELECT COUNT(DISTINCT v.id_venta) AS total_ventas
-                FROM ventas v
-                ${joinProductosParaConteo}
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
                 ${filtrosCantidad}
             `, paramsCantidad);
 
-            const cantidadVentas = ventasCountResult.rows[0].total_ventas;
-
-            // 4. QUERY 3: Detalle de Productos Vendidos
-            let filtrosProductos = filtrosBase;
-            let paramsProductos = [...paramsBase];
-
-            if (categoria) {
-                filtrosProductos += ` AND (p.id_categoria = $${paramsProductos.length + 1} OR dv.id_categoria = $${paramsProductos.length + 1})`;
-                paramsProductos.push(categoria);
-            }
-            if (proveedor) {
-                filtrosProductos += ` AND p.id_proveedor = $${paramsProductos.length + 1}`;
-                paramsProductos.push(proveedor);
-            }
-
-            const productosResult = await db.query(`
-                SELECT 
-                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
-                    MAX(c.nombre_categoria) AS categoria,
-                    MAX(pr.nombre) AS proveedor,
-                    SUM(dv.cantidad) AS cantidad,
-                    SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)) AS total
-                FROM detalle_ventas dv
-                LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                LEFT JOIN categorias c ON c.id_categoria = COALESCE(p.id_categoria, dv.id_categoria)
-                LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
-                JOIN ventas v ON dv.id_venta = v.id_venta
-                ${filtrosProductos}
-                GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
-                ORDER BY total DESC
-            `, paramsProductos);
+            const totalGeneral = totalDiaResult.rows[0].total_dia;
 
             return res.json({
                 resumen: {
-                    total_dia: resumenMedios.total_dia,
+                    total_dia: totalGeneral,
                     cantidad_ventas: cantidadVentas,
-                    total_efectivo: resumenMedios.total_efectivo,
-                    total_transferencia: resumenMedios.total_transferencia,
-                    total_tarjeta: resumenMedios.total_tarjeta
+                    total_efectivo: mediosPago.total_efectivo,
+                    total_transferencia: mediosPago.total_transferencia,
+                    total_tarjeta: mediosPago.total_tarjeta
                 },
-                productos: productosResult.rows
+                productos: rows
             });
 
         } catch (error) {
