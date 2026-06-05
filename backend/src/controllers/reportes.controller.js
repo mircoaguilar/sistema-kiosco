@@ -13,13 +13,8 @@ const reportesController = {
                 hora_hasta
             } = req.query;
 
-            let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
-            let filtrosCantidad = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
-            let filtrosMediosPago = `WHERE COALESCE(v.estado, 'activa') = 'activa'`;
-
-            let paramsProductos = [];
-            let paramsCantidad = [];
-            let paramsMediosPago = [];
+            let filtrosBaseFecha = '';
+            let paramsBaseFecha = [];
 
             let fechaInicio = null;
             let fechaFin = null;
@@ -33,40 +28,44 @@ const reportesController = {
             }
 
             if (fechaInicio && fechaFin) {
-                const queryRango = ` AND v.fecha_hora - INTERVAL '3 hours' BETWEEN $1::timestamp AND $2::timestamp`;
-                filtrosProductos += queryRango;
-                filtrosCantidad += queryRango;
-                filtrosMediosPago += queryRango;
-
-                paramsProductos.push(fechaInicio, fechaFin);
-                paramsCantidad.push(fechaInicio, fechaFin);
-                paramsMediosPago.push(fechaInicio, fechaFin);
-
+                filtrosBaseFecha = ` AND v.fecha_hora - INTERVAL '3 hours' BETWEEN $1::timestamp AND $2::timestamp`;
+                paramsBaseFecha.push(fechaInicio, fechaFin);
             } else if (fechaInicio) {
-                const queryDesde = ` AND v.fecha_hora - INTERVAL '3 hours' >= $1::timestamp`;
-                filtrosProductos += queryDesde;
-                filtrosCantidad += queryDesde;
-                filtrosMediosPago += queryDesde;
-
-                paramsProductos.push(fechaInicio);
-                paramsCantidad.push(fechaInicio);
-                paramsMediosPago.push(fechaInicio);
-
+                filtrosBaseFecha = ` AND v.fecha_hora - INTERVAL '3 hours' >= $1::timestamp`;
+                paramsBaseFecha.push(fechaInicio);
             } else if (fechaFin) {
-                const queryHasta = ` AND v.fecha_hora - INTERVAL '3 hours' <= $1::timestamp`;
-                filtrosProductos += queryHasta;
-                filtrosCantidad += queryHasta;
-                filtrosMediosPago += queryHasta;
-
-                paramsProductos.push(fechaFin);
-                paramsCantidad.push(fechaFin);
-                paramsMediosPago.push(fechaFin);
-
+                filtrosBaseFecha = ` AND v.fecha_hora - INTERVAL '3 hours' <= $1::timestamp`;
+                paramsBaseFecha.push(fechaFin);
             } else {
-                const queryDiaActual = ` AND DATE(v.fecha_hora - INTERVAL '3 hours') = DATE(CURRENT_TIMESTAMP - INTERVAL '3 hours')`;
-                filtrosProductos += queryDiaActual;
-                filtrosCantidad += queryDiaActual;
-                filtrosMediosPago += queryDiaActual;
+                filtrosBaseFecha = ` AND DATE(v.fecha_hora - INTERVAL '3 hours') = DATE(CURRENT_TIMESTAMP - INTERVAL '3 hours')`;
+            }
+
+            let paramsProductos = [...paramsBaseFecha];
+            let paramsCantidad = [...paramsBaseFecha];
+            let paramsMediosPago = [...paramsBaseFecha];
+
+            let filtrosProductos = `WHERE COALESCE(v.estado, 'activa') = 'activa'${filtrosBaseFecha}`;
+            let filtrosCantidad = `WHERE COALESCE(v.estado, 'activa') = 'activa'${filtrosBaseFecha}`;
+            let filtrosMediosPago = `WHERE COALESCE(v.estado, 'activa') = 'activa'${filtrosBaseFecha}`;
+
+            if (categoria && categoria !== 'Todas las categorías') {
+                let indexProd = paramsProductos.length + 1;
+                filtrosProductos += ` AND COALESCE(p.id_categoria, dv.id_categoria) = $${indexProd}`;
+                paramsProductos.push(categoria);
+
+                let indexCant = paramsCantidad.length + 1;
+                filtrosCantidad += ` AND COALESCE(p.id_categoria, dv.id_categoria) = $${indexCant}`;
+                paramsCantidad.push(categoria);
+            }
+
+            if (proveedor && proveedor !== 'Todos los proveedores') {
+                let indexProd = paramsProductos.length + 1;
+                filtrosProductos += ` AND p.id_proveedor = $${indexProd}`;
+                paramsProductos.push(proveedor);
+
+                let indexCant = paramsCantidad.length + 1;
+                filtrosCantidad += ` AND p.id_proveedor = $${indexCant}`;
+                paramsCantidad.push(proveedor);
             }
 
             const productosResult = await db.query(`
@@ -122,11 +121,13 @@ const reportesController = {
             const mediosPago = mediosPagoResult.rows[0];
 
             const totalDiaResult = await db.query(`
-                SELECT
-                    COALESCE(SUM(v.total_final), 0) AS total_dia
+                SELECT 
+                    COALESCE(SUM(dv.subtotal * (1 + COALESCE(v.recargo_porcentaje, 0) / 100)), 0) AS total_dia
                 FROM ventas v
-                ${filtrosMediosPago}
-            `, paramsMediosPago);
+                JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+                LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                ${filtrosCantidad}
+            `, paramsCantidad);
 
             const totalGeneral = totalDiaResult.rows[0].total_dia;
 
