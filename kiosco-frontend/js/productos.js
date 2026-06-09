@@ -42,8 +42,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         theme: 'bootstrap-5' 
     });
 
-    $('#filtro-categoria').on('change', aplicarFiltros);
-    $('#filtro-proveedor').on('change', aplicarFiltros);
+    $('#filtro-categoria').on('change', function() {
+        aplicarFiltros();
+        $('#filtro-proveedor').select2({ width: '100%', theme: 'bootstrap-5' }); 
+    });
+
+    $('#filtro-proveedor').on('change', function() {
+        aplicarFiltros();
+        $('#filtro-categoria').select2({ width: '100%', theme: 'bootstrap-5' }); 
+    });
 
     $('#filtro-categoria').trigger('change');
     $('#filtro-proveedor').trigger('change');
@@ -337,8 +344,8 @@ function aplicarFiltros() {
     const filtroProvInput = document.getElementById('filtro-proveedor');
 
     const texto = buscarInput ? buscarInput.value.toLowerCase() : '';
-    const categoria = filtroCatInput ? filtroCatInput.value : '';
-    const proveedor = filtroProvInput ? filtroProvInput.value : '';
+    const categoriaSelected = filtroCatInput ? filtroCatInput.value : '';
+    const proveedorSelected = filtroProvInput ? filtroProvInput.value : '';
 
     let filtrados = productos;
 
@@ -349,10 +356,58 @@ function aplicarFiltros() {
         );
     }
 
-    if (categoria) filtrados = filtrados.filter(p => p.id_categoria == categoria);
-    if (proveedor) filtrados = filtrados.filter(p => p.id_proveedor == proveedor);
+    if (categoriaSelected) {
+        filtrados = filtrados.filter(p => p.id_categoria == categoriaSelected);
+    }
+
+    if (proveedorSelected) {
+        filtrados = filtrados.filter(p => p.id_proveedor == proveedorSelected);
+    }
 
     renderizarTabla(filtrados);
+
+    actualizarFiltrosCruzados(categoriaSelected, proveedorSelected);
+}
+
+function actualizarFiltrosCruzados(catSeleccionada, provSeleccionado) {
+
+    if (!catSeleccionada) {
+        const provsDisponibles = new Set();
+        productos.forEach(p => {
+            if (!provSeleccionado || p.id_proveedor == provSeleccionado) {
+                if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+            }
+        });
+
+        const selectProv = document.getElementById('filtro-proveedor');
+        let options = '<option value="">Todos los Proveedores</option>';
+        proveedores.forEach(p => {
+            if (provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)) {
+                const checked = Number(p.id_proveedor) === Number(provSeleccionado) ? 'selected' : '';
+                options += `<option value="${p.id_proveedor}" ${checked}>${p.nombre}</option>`;
+            }
+        });
+        selectProv.innerHTML = options;
+    }
+
+    if (!provSeleccionado) {
+        const catsDisponibles = new Set();
+        productos.forEach(p => {
+            if (!catSeleccionada || p.id_categoria == catSeleccionada) {
+                if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
+            }
+        });
+
+        const selectCat = document.getElementById('filtro-categoria');
+        let options = '<option value="">Todas las Categorías</option>';
+        categorias.forEach(c => {
+            if (catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)) {
+                const checked = Number(c.id_categoria) === Number(catSeleccionada) ? 'selected' : '';
+                options += `<option value="${c.id_categoria}" ${checked}>${c.nombre_categoria}</option>`;
+            }
+        });
+        selectCat.innerHTML = options;
+    }
 }
 
 async function aplicarSubaMasiva() {
