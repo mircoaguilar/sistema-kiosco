@@ -309,7 +309,7 @@ async function procesarVenta(metodo) {
     }
 }
 
-function abrirModalVentaRapida() {
+window.abrirModalVentaRapida = function () {
     const modalEl = document.getElementById('modalVentaRapida');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
@@ -322,9 +322,9 @@ function abrirModalVentaRapida() {
     modal.show();
 
     document.getElementById("vr-descripcion").focus();
-}
+};
 
-function agregarVentaRapida() {
+window.agregarVentaRapida = function () {
     const descripcion = document.getElementById("vr-descripcion").value.trim();
     const categoria = document.getElementById("vr-categoria").value;
     const monto = parseFloat(document.getElementById("vr-monto").value);
@@ -348,7 +348,7 @@ function agregarVentaRapida() {
 
     const modalEl = document.getElementById('modalVentaRapida');
     bootstrap.Modal.getInstance(modalEl).hide();
-}
+};
 
 async function cargarCategoriasVentaRapida() {
     try {
