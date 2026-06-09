@@ -84,11 +84,16 @@ async function cargarCategorias() {
         categorias = await res.json();
         
         const opts = categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
+        
         document.getElementById('categoria').innerHTML = opts;
         
-        $('#filtro-categoria').innerHTML = '<option value="">Todas las Categorías</option>' + opts;
+        const selectFiltro = document.getElementById('filtro-categoria');
+        if (selectFiltro) {
+            selectFiltro.innerHTML = '<option value="">Todas las Categorías</option>' + opts;
+        }
+
         $('#filtro-categoria').trigger('change'); 
-        
+
         document.getElementById('lista-categorias-gestion').innerHTML = categorias.map(c => `
             <li class="list-group-item d-flex justify-content-between align-items-center py-2 small">
                 ${c.nombre_categoria}
@@ -96,7 +101,9 @@ async function cargarCategorias() {
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
             </li>`).join('');
-    } catch { console.error("Error categorías"); }
+    } catch (error) { 
+        console.error("Error categorías", error); 
+    }
 }
 
 async function cargarProveedores() {
