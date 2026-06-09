@@ -309,6 +309,21 @@ async function procesarVenta(metodo) {
     }
 }
 
+function abrirModalVentaRapida() {
+    const modalEl = document.getElementById('modalVentaRapida');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    document.getElementById("vr-descripcion").value = '';
+    document.getElementById("vr-monto").value = '';
+    document.getElementById("vr-categoria").value = '';
+
+    cargarCategoriasVentaRapida();
+
+    modal.show();
+
+    document.getElementById("vr-descripcion").focus();
+}
+
 function agregarVentaRapida() {
     const descripcion = document.getElementById("vr-descripcion").value.trim();
     const categoria = document.getElementById("vr-categoria").value;
