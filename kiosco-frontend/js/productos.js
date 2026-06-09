@@ -22,14 +22,18 @@ const btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
 document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
 
 document.addEventListener('DOMContentLoaded', async () => {
-
-    $('#filtro-categoria, #filtro-proveedor').select2({
-        width: '100%'
-    });
     
     await cargarCategorias();
     await cargarProveedores();
     await cargarProductos();
+
+    $('#filtro-categoria, #filtro-proveedor').select2({
+        width: '100%',
+        theme: 'bootstrap-5' 
+
+    $('#filtro-categoria').trigger('change');
+    $('#filtro-proveedor').trigger('change');
+    });
 
     const el = document.getElementById('offcanvasCategorias');
 
@@ -81,54 +85,22 @@ function confirmar(mensaje) {
 async function cargarCategorias() {
     try {
         const res = await fetch(`${API_URL}/categorias`, { headers: { 'Authorization': `Bearer ${token}` }});
-        
-        // Usamos const para evitar problemas de variables globales
-        const categorias = await res.json(); 
-        
-        // DEPURACIÓN: Veamos qué trae realmente la API
-        console.log("Respuesta de la API de categorías:", categorias);
-
-        // Validamos que la respuesta sea realmente un array antes de hacer map()
-        if (!Array.isArray(categorias)) {
-            console.error("¡Cuidado! La API de categorías no devolvió un array. Revisa el endpoint.");
-            return; // Detenemos la función aquí si no es un array
-        }
+        categorias = await res.json();
         
         const opts = categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
+        document.getElementById('categoria').innerHTML = opts;
         
-        // Validación 1: ¿Existe el elemento 'categoria'?
-        const selectCategoria = document.getElementById('categoria');
-        if (selectCategoria) {
-            selectCategoria.innerHTML = opts;
-        } else {
-            console.warn("El elemento con ID 'categoria' no existe en el HTML.");
-        }
-        
-        // Validación 2: Filtro categoría (Esto ya lo tenías bien)
-        const selectFiltro = document.getElementById('filtro-categoria');
-        if (selectFiltro) {
-            selectFiltro.innerHTML = '<option value="">Todas las Categorías</option>' + opts;
-        }
+        $('#filtro-categoria').innerHTML = '<option value="">Todas las Categorías</option>' + opts;
         $('#filtro-categoria').trigger('change'); 
-
-        // Validación 3: ¿Existe la lista de gestión?
-        const listaGestion = document.getElementById('lista-categorias-gestion');
-        if (listaGestion) {
-            listaGestion.innerHTML = categorias.map(c => `
-                <li class="list-group-item d-flex justify-content-between align-items-center py-2 small">
-                    ${c.nombre_categoria}
-                    <button class="btn btn-link text-danger p-0" onclick="eliminarCat(${c.id_categoria})">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </button>
-                </li>`).join('');
-        } else {
-            console.warn("El elemento con ID 'lista-categorias-gestion' no existe en el HTML.");
-        }
-
-    } catch (error) { 
-        // Si hay error, lo mostramos bien en la consola
-        console.error("Error crítico en cargarCategorias:", error); 
-    }
+        
+        document.getElementById('lista-categorias-gestion').innerHTML = categorias.map(c => `
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2 small">
+                ${c.nombre_categoria}
+                <button class="btn btn-link text-danger p-0" onclick="eliminarCat(${c.id_categoria})">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            </li>`).join('');
+    } catch { console.error("Error categorías"); }
 }
 
 async function cargarProveedores() {
