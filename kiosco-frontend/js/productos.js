@@ -23,22 +23,22 @@ document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuari
 
 document.addEventListener('DOMContentLoaded', async () => {
 
-    await cargarCategorias();
-    await cargarProveedores();
-    await cargarProductos(); 
-
     $('#filtro-categoria, #filtro-proveedor').select2({
         width: '100%'
     });
-    $('#filtro-categoria').trigger('change');
-    $('#filtro-proveedor').trigger('change');
+    
+    await cargarCategorias();
+    await cargarProveedores();
+    await cargarProductos();
 
     const el = document.getElementById('offcanvasCategorias');
+
     if (el) {
         offcanvasCategorias = new bootstrap.Offcanvas(el);
 
         document.getElementById('btnAbrirCategorias').onclick = () => {
             bootstrapModalProd.hide();
+
             setTimeout(() => {
                 offcanvasCategorias.show();
             }, 300);
