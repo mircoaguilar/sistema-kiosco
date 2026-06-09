@@ -21,10 +21,18 @@ const btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
 
 document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
 
-document.addEventListener('DOMContentLoaded', () => {
-    cargarCategorias();
-    cargarProveedores();
-    cargarProductos();
+document.addEventListener('DOMContentLoaded', async () => {
+    await cargarCategorias();
+    await cargarProveedores();
+    await cargarProductos();
+
+    $('#filtro-categoria').select2({
+        width: '100%'
+    });
+
+    $('#filtro-proveedor').select2({
+        width: '100%'
+    });
 
     const el = document.getElementById('offcanvasCategorias');
 
@@ -32,11 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
         offcanvasCategorias = new bootstrap.Offcanvas(el);
 
         document.getElementById('btnAbrirCategorias').onclick = () => {
-            bootstrapModalProd.hide();  
+            bootstrapModalProd.hide();
 
             setTimeout(() => {
-                offcanvasCategorias.show(); 
-            }, 300); 
+                offcanvasCategorias.show();
+            }, 300);
         };
     }
 });
@@ -337,8 +345,8 @@ function aplicarFiltros() {
 }
 
 document.getElementById('buscar-producto').addEventListener('input', aplicarFiltros);
-document.getElementById('filtro-categoria').addEventListener('change', aplicarFiltros);
-document.getElementById('filtro-proveedor').addEventListener('change', aplicarFiltros);
+$('#filtro-categoria').on('change', aplicarFiltros);
+$('#filtro-proveedor').on('change', aplicarFiltros);
 document.getElementById('filtro-estado').addEventListener('change', cargarProductos);
 
 document.getElementById('btnNuevoProd').onclick = async () => {
