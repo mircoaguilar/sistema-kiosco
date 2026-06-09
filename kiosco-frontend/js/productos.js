@@ -23,22 +23,22 @@ document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuari
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+    await cargarCategorias();
+    await cargarProveedores();
+    await cargarProductos(); 
+
     $('#filtro-categoria, #filtro-proveedor').select2({
         width: '100%'
     });
-    
-    await cargarCategorias();
-    await cargarProveedores();
-    await cargarProductos();
+    $('#filtro-categoria').trigger('change');
+    $('#filtro-proveedor').trigger('change');
 
     const el = document.getElementById('offcanvasCategorias');
-
     if (el) {
         offcanvasCategorias = new bootstrap.Offcanvas(el);
 
         document.getElementById('btnAbrirCategorias').onclick = () => {
             bootstrapModalProd.hide();
-
             setTimeout(() => {
                 offcanvasCategorias.show();
             }, 300);
@@ -91,8 +91,6 @@ async function cargarCategorias() {
         if (selectFiltro) {
             selectFiltro.innerHTML = '<option value="">Todas las Categorías</option>' + opts;
         }
-
-        $('#filtro-categoria').trigger('change'); 
 
         document.getElementById('lista-categorias-gestion').innerHTML = categorias.map(c => `
             <li class="list-group-item d-flex justify-content-between align-items-center py-2 small">
