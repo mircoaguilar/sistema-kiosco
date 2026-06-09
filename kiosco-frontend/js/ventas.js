@@ -57,7 +57,6 @@ const mixtoTotal = document.getElementById('mixto-total');
 const mixtoEfectivo = document.getElementById('mixto-efectivo');
 const mixtoTransferencia = document.getElementById('mixto-transferencia');
 const modalTarjeta = new bootstrap.Modal(document.getElementById('modalTarjeta'));
-const tarjetaTotal = document.getElementById('tarjeta-total');
 
 function enviarATiqueteraLocal(venta) {
     fetch('http://localhost:3000/imprimir', {
@@ -350,36 +349,6 @@ window.agregarVentaRapida = function () {
     bootstrap.Modal.getInstance(modalEl).hide();
 };
 
-async function cargarCategoriasVentaRapida() {
-    try {
-        const res = await fetch(`${API_URL}/categorias`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
-
-        const categorias = await res.json();
-        const select = document.getElementById("vr-categoria");
-
-        if (!select) return;
-
-        select.innerHTML = `
-            <option value="">Seleccionar categoría</option>
-        ` + categorias.map(c => `
-            <option value="${c.id_categoria}">
-                ${c.nombre_categoria}
-            </option>
-        `).join('');
-
-    } catch (err) {
-        console.error("Error cargando categorías:", err);
-    }
-}
-
 document.getElementById('btn-guardar-movimiento').onclick = async () => {
 
     const tipo = document.getElementById('movimiento-tipo').value;
@@ -541,43 +510,20 @@ document.addEventListener('keydown', (e) => {
 
 let selectCategoriaInicializado = false;
 
-async function cargarCategoriasVentaRapida() {
-    try {
-        const res = await fetch(`${API_URL}/categorias`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+window.abrirModalVentaRapida = async function () {
+    const modalEl = document.getElementById('modalVentaRapida');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
+    document.getElementById("vr-descripcion").value = '';
+    document.getElementById("vr-monto").value = '';
 
-        const categorias = await res.json();
-        const select = document.getElementById("vr-categoria");
+    await cargarCategoriasVentaRapida();
 
-        select.innerHTML = `
-            <option value="">Seleccionar categoría</option>
-        ` + categorias.map(c => `
-            <option value="${c.id_categoria}">
-                ${c.nombre_categoria}
-            </option>
-        `).join('');
+    $('#vr-categoria').val('').trigger('change');
 
-        if (!selectCategoriaInicializado) {
+    modal.show();
 
-            $('#vr-categoria').select2({
-                dropdownParent: $('#modalVentaRapida'),
-                width: '100%',
-                placeholder: 'Buscar categoría'
-            });
-
-            selectCategoriaInicializado = true;
-        }
-
-    } catch (err) {
-        console.error("Error cargando categorías:", err);
-    }
-}
+    document.getElementById("vr-descripcion").focus();
+};
 
 inputCodigo.focus();
