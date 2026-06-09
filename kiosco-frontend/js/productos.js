@@ -12,17 +12,25 @@ let proveedores = [];
 let offcanvasCategorias;
 let editandoID = null;
 
-const bootstrapModalProd = new bootstrap.Modal(document.getElementById('modalProducto'));
-const formProd = document.getElementById('form-producto');
-const tablaBody = document.getElementById('tabla-productos-body');
-
-const modalConfirm = new bootstrap.Modal(document.getElementById('modalConfirm'));
-const btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
-
-document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
+let bootstrapModalProd;
+let formProd;
+let tablaBody;
+let modalConfirm;
+let btnConfirmarAccion;
 
 document.addEventListener('DOMContentLoaded', async () => {
     
+    bootstrapModalProd = new bootstrap.Modal(document.getElementById('modalProducto'));
+    formProd = document.getElementById('form-producto');
+    tablaBody = document.getElementById('tabla-productos-body');
+    modalConfirm = new bootstrap.Modal(document.getElementById('modalConfirm'));
+    btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
+
+    const txtVendedor = document.getElementById('nombre-vendedor');
+    if (txtVendedor) {
+        txtVendedor.innerText = `Vendedor: ${nombreUsuario}`;
+    }
+
     await cargarCategorias();
     await cargarProveedores();
     await cargarProductos();
@@ -30,19 +38,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#filtro-categoria, #filtro-proveedor').select2({
         width: '100%',
         theme: 'bootstrap-5' 
+    });
 
     $('#filtro-categoria').trigger('change');
     $('#filtro-proveedor').trigger('change');
-    });
 
     const el = document.getElementById('offcanvasCategorias');
-
     if (el) {
         offcanvasCategorias = new bootstrap.Offcanvas(el);
 
         document.getElementById('btnAbrirCategorias').onclick = () => {
             bootstrapModalProd.hide();
-
             setTimeout(() => {
                 offcanvasCategorias.show();
             }, 300);
