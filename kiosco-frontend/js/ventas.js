@@ -539,6 +539,7 @@ async function cargarCategoriasVentaRapida() {
             $('#vr-categoria').select2({
                 dropdownParent: $('#modalVentaRapida'),
                 width: '100%',
+                theme: 'bootstrap-5',
                 placeholder: 'Buscar categoría'
             });
 

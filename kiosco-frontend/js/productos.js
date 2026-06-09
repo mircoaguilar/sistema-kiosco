@@ -17,6 +17,7 @@ let formProd;
 let tablaBody;
 let modalConfirm;
 let btnConfirmarAccion;
+let modalPrecios;
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tablaBody = document.getElementById('tabla-productos-body');
     modalConfirm = new bootstrap.Modal(document.getElementById('modalConfirm'));
     btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
+    modalPrecios = new bootstrap.Modal(document.getElementById('modalPrecios'));
 
     const txtVendedor = document.getElementById('nombre-vendedor');
     if (txtVendedor) {
@@ -40,6 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         theme: 'bootstrap-5' 
     });
 
+    $('#filtro-categoria').on('change', aplicarFiltros);
+    $('#filtro-proveedor').on('change', aplicarFiltros);
+
     $('#filtro-categoria').trigger('change');
     $('#filtro-proveedor').trigger('change');
 
@@ -54,6 +59,44 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 300);
         };
     }
+
+    if (formProd) {
+        formProd.addEventListener('submit', guardarProducto);
+    }
+
+    document.getElementById('buscar-producto').addEventListener('input', aplicarFiltros);
+    document.getElementById('filtro-estado').addEventListener('change', cargarProductos);
+
+    document.getElementById('btnNuevoProd').onclick = async () => {
+        limpiarFormulario();
+        await cargarCategorias();
+        bootstrapModalProd.show();
+    };
+
+    document.getElementById('btnSubaMasiva').onclick = async () => {
+        document.getElementById('filtro-cat-precio').innerHTML =
+            '<option value="">Todas</option>' +
+            categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
+
+        document.getElementById('filtro-prov-precio').innerHTML =
+            '<option value="">Todos</option>' +
+            proveedores.map(p => `<option value="${p.id_proveedor}">${p.nombre}</option>`).join('');
+
+        modalPrecios.show();
+    };
+
+    document.getElementById('aplicarSuba').onclick = aplicarSubaMasiva;
+    document.getElementById('form-nueva-cat').onsubmit = crearNuevaCategoria;
+
+    document.getElementById('es_pesable').addEventListener('change', function() {
+        const inputStock = document.getElementById('stock');
+        inputStock.placeholder = this.checked ? "0.000 kg" : "";
+    });
+
+    document.getElementById('btn-logout').onclick = () => { 
+        localStorage.clear(); 
+        window.location.href = 'login.html'; 
+    };
 });
 
 function mostrarToast(mensaje, tipo = 'success') {
@@ -87,16 +130,16 @@ function confirmar(mensaje) {
     });
 }
 
-
 async function cargarCategorias() {
     try {
         const res = await fetch(`${API_URL}/categorias`, { headers: { 'Authorization': `Bearer ${token}` }});
         categorias = await res.json();
         
         const opts = categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
-        document.getElementById('categoria').innerHTML = opts;
         
-        $('#filtro-categoria').innerHTML = '<option value="">Todas las Categorías</option>' + opts;
+        document.getElementById('categoria').innerHTML = opts;
+        document.getElementById('filtro-categoria').innerHTML = '<option value="">Todas las Categorías</option>' + opts;
+        
         $('#filtro-categoria').trigger('change'); 
         
         document.getElementById('lista-categorias-gestion').innerHTML = categorias.map(c => `
@@ -106,55 +149,41 @@ async function cargarCategorias() {
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
             </li>`).join('');
-    } catch { console.error("Error categorías"); }
+    } catch (err) { console.error("Error categorías", err); }
 }
 
 async function cargarProveedores() {
     try {
-        const res = await fetch(`${API_URL}/proveedores`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
+        const res = await fetch(`${API_URL}/proveedores`, { headers: { 'Authorization': `Bearer ${token}` }});
         proveedores = await res.json();
 
-        const select = document.getElementById('proveedor');
-        select.innerHTML = '<option value="">Sin proveedor</option>' +
+        document.getElementById('proveedor').innerHTML = '<option value="">Sin proveedor</option>' +
             proveedores.map(p => `<option value="${p.id_proveedor}">${p.nombre}</option>`).join('');
 
-        const selectFiltro = document.getElementById('filtro-proveedor');
-        selectFiltro.innerHTML = '<option value="">Todos los Proveedores</option>' +
+        document.getElementById('filtro-proveedor').innerHTML = '<option value="">Todos los Proveedores</option>' +
             proveedores.map(p => `<option value="${p.id_proveedor}">${p.nombre}</option>`).join('');
 
         $('#filtro-proveedor').trigger('change');
-
-    } catch (error) {
-        console.error("Error proveedores", error);
-    }
+    } catch (error) { console.error("Error proveedores", error); }
 }
 
 async function cargarProductos() {
     try {
         const estado = document.getElementById('filtro-estado')?.value || 'activos';
-
-        const res = await fetch(`${API_URL}/productos?estado=${estado}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_URL}/productos?estado=${estado}`, { headers: { 'Authorization': `Bearer ${token}` }});
         productos = await res.json();
         aplicarFiltros();
-    } catch { console.error("Error productos"); }
+    } catch (err) { console.error("Error productos", err); }
 }
 
 function renderizarTabla(lista) {
-
     tablaBody.innerHTML = lista.map(p => {
         const esBajo = parseInt(p.stock) <= parseInt(p.stock_minimo);
-        const precioARS = parseFloat(p.precio_venta).toLocaleString('es-AR', { 
-            style: 'currency', currency: 'ARS' 
-        });
+        const precioARS = parseFloat(p.precio_venta).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 
         return `
         <tr class="${esBajo ? 'stock-bajo' : ''}">
-            <td class="text-muted small">${p.codigo_barras}</td>
+            <td class="text-muted small">${p.codigo_barras || '-'}</td>
             <td class="fw-bold">${p.nombre}</td>
             <td><span class="badge bg-light text-dark border px-2 py-2">${p.nombre_categoria || 'General'}</span></td>
             <td>${p.nombre_proveedor || '-'}</td>
@@ -165,15 +194,12 @@ function renderizarTabla(lista) {
                 </span>
                 <small class="text-muted d-block mt-1" style="font-size: 0.65rem">Mín: ${parseFloat(p.stock_minimo)}</small>
             </td>
-            <td class="text-center">
-                ${p.fecha_vencimiento || '-'}
-            </td>
+            <td class="text-center">${p.fecha_vencimiento || '-'}</td>
             <td class="text-center">
                 <div class="btn-group shadow-sm border rounded overflow-hidden">
                     <button class="btn btn-acciones text-primary border-end" onclick="prepararEdicion(${p.id_producto})" title="Editar">
                         <i class="bi bi-pencil-fill"></i>
                     </button>
-
                     ${p.activo == 1 ? `
                         <button class="btn btn-acciones text-danger" onclick="eliminarProducto(${p.id_producto})" title="Dar de baja">
                             <i class="bi bi-trash3-fill"></i>
@@ -189,7 +215,7 @@ function renderizarTabla(lista) {
     }).join('');
 }
 
-formProd.addEventListener('submit', async (e) => {
+async function guardarProducto(e) {
     e.preventDefault();
     const payload = {
         codigo_barras: document.getElementById('codigo').value,
@@ -214,26 +240,21 @@ formProd.addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
 
-       if (res.ok) {
+        if (res.ok) {
+            mostrarToast(editandoID ? "Producto actualizado correctamente" : "Producto creado correctamente", editandoID ? "info" : "success");
+            await cargarProductos();
 
-        mostrarToast(
-            editandoID ? "Producto actualizado correctamente" : "Producto creado correctamente",
-            editandoID ? "info" : "success"
-        );
-
-        await cargarProductos();
-
-        if (document.getElementById('modo-rapido').checked && !editandoID) {
-            document.getElementById('codigo').value = '';
-            document.getElementById('nombre').value = '';
-            document.getElementById('precio_venta').value = '';
-            document.getElementById('stock').value = '';
-            document.getElementById('fecha_vencimiento').value = '';
-            document.getElementById('codigo').focus();
-        } else {
-            bootstrapModalProd.hide();
-            limpiarFormulario();
-        }
+            if (document.getElementById('modo-rapido').checked && !editandoID) {
+                document.getElementById('codigo').value = '';
+                document.getElementById('nombre').value = '';
+                document.getElementById('precio_venta').value = '';
+                document.getElementById('stock').value = '';
+                document.getElementById('fecha_vencimiento').value = '';
+                document.getElementById('codigo').focus();
+            } else {
+                bootstrapModalProd.hide();
+                limpiarFormulario();
+            }
         } else {
             mostrarToast("Error al guardar el producto", "danger");
         }
@@ -241,7 +262,7 @@ formProd.addEventListener('submit', async (e) => {
         console.error(error);
         mostrarToast("Error de conexión al servidor", "danger");
     }
-});
+}
 
 window.prepararEdicion = async (id) => {
     const p = productos.find(x => Number(x.id_producto) === Number(id));
@@ -249,7 +270,7 @@ window.prepararEdicion = async (id) => {
     await cargarCategorias();
     editandoID = id;
     document.getElementById('modalTitulo').innerText = "Editar Producto";
-    document.getElementById('codigo').value = p.codigo_barras;
+    document.getElementById('codigo').value = p.codigo_barras || '';
     document.getElementById('nombre').value = p.nombre;
     document.getElementById('categoria').value = p.id_categoria;
     document.getElementById('proveedor').value = p.id_proveedor || '';
@@ -266,10 +287,7 @@ window.prepararEdicion = async (id) => {
 window.eliminarProducto = async (id) => {
     if (!(await confirmar("¿Dar de baja este producto?"))) return;
     try {
-        const res = await fetch(`${API_URL}/productos/${id}`, { 
-            method: 'DELETE', 
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_URL}/productos/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
         if (res.ok) {
             await cargarProductos();
             mostrarToast("Producto dado de baja correctamente", "warning");
@@ -279,29 +297,18 @@ window.eliminarProducto = async (id) => {
 
 window.reactivarProducto = async (id) => {
     if (!(await confirmar("¿Reactivar este producto?"))) return;
-
     try {
-        const res = await fetch(`${API_URL}/productos/${id}/reactivar`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
+        const res = await fetch(`${API_URL}/productos/${id}/reactivar`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }});
         if (res.ok) {
             mostrarToast("Producto reactivado correctamente", "success");
             await cargarProductos();
         }
-
-    } catch {
-        mostrarToast("Error al reactivar", "danger");
-    }
+    } catch { mostrarToast("Error al reactivar", "danger"); }
 };
 
 window.eliminarCat = async (id) => {
     const tieneProductos = productos.some(p => p.id_categoria == id && p.activo !== 0);
-
-    if (tieneProductos) {
-        return mostrarToast("No podés eliminar: tiene productos activos", "danger");
-    }
+    if (tieneProductos) return mostrarToast("No podés eliminar: tiene productos activos", "danger");
 
     if (!(await confirmar("¿Eliminar categoría definitivamente?"))) return;
     try {
@@ -312,14 +319,12 @@ window.eliminarCat = async (id) => {
         } else {
             mostrarToast("Error al eliminar categoría", "danger");
         }
-    } catch {
-        mostrarToast("Error de red", "danger");
-    }
+    } catch { mostrarToast("Error de red", "danger"); }
 };
 
 function limpiarFormulario() {
     editandoID = null;
-    formProd.reset();
+    if (formProd) formProd.reset();
     document.getElementById('modalTitulo').innerText = "Nuevo Producto";
     document.getElementById('stock_minimo').value = "5";
     document.getElementById('es_pesable').checked = false; 
@@ -327,9 +332,13 @@ function limpiarFormulario() {
 }
 
 function aplicarFiltros() {
-    const texto = document.getElementById('buscar-producto').value.toLowerCase();
-    const categoria = document.getElementById('filtro-categoria').value;
-    const proveedor = document.getElementById('filtro-proveedor').value;
+    const buscarInput = document.getElementById('buscar-producto');
+    const filtroCatInput = document.getElementById('filtro-categoria');
+    const filtroProvInput = document.getElementById('filtro-proveedor');
+
+    const texto = buscarInput ? buscarInput.value.toLowerCase() : '';
+    const categoria = filtroCatInput ? filtroCatInput.value : '';
+    const proveedor = filtroProvInput ? filtroProvInput.value : '';
 
     let filtrados = productos;
 
@@ -340,124 +349,58 @@ function aplicarFiltros() {
         );
     }
 
-    if (categoria) {
-        filtrados = filtrados.filter(p => p.id_categoria == categoria);
-    }
-
-    if (proveedor) {
-        filtrados = filtrados.filter(p => p.id_proveedor == proveedor);
-    }
+    if (categoria) filtrados = filtrados.filter(p => p.id_categoria == categoria);
+    if (proveedor) filtrados = filtrados.filter(p => p.id_proveedor == proveedor);
 
     renderizarTabla(filtrados);
 }
 
-document.getElementById('buscar-producto').addEventListener('input', aplicarFiltros);
-$('#filtro-categoria').on('change', aplicarFiltros);
-$('#filtro-proveedor').on('change', aplicarFiltros);
-document.getElementById('filtro-estado').addEventListener('change', cargarProductos);
-
-document.getElementById('btnNuevoProd').onclick = async () => {
-    limpiarFormulario();
-    await cargarCategorias();
-    bootstrapModalProd.show();
-};
-
-const modalPrecios = new bootstrap.Modal(document.getElementById('modalPrecios'));
-
-document.getElementById('btnSubaMasiva').onclick = async () => {
-    document.getElementById('filtro-cat-precio').innerHTML =
-        '<option value="">Todas</option>' +
-        categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
-
-    document.getElementById('filtro-prov-precio').innerHTML =
-        '<option value="">Todos</option>' +
-        proveedores.map(p => `<option value="${p.id_proveedor}">${p.nombre}</option>`).join('');
-
-    modalPrecios.show();
-};
-
-document.getElementById('aplicarSuba').onclick = async () => {
+async function aplicarSubaMasiva() {
     const porcentaje = parseFloat(document.getElementById('porcentaje').value);
     const id_categoria = document.getElementById('filtro-cat-precio').value;
     const id_proveedor = document.getElementById('filtro-prov-precio').value;
 
-    if (!porcentaje) {
-        mostrarToast("Ingresá un porcentaje válido", "warning");
-        return;
-    }
-
+    if (!porcentaje) return mostrarToast("Ingresá un porcentaje válido", "warning");
     if (!(await confirmar(`¿Aplicar ${porcentaje}% de aumento a los productos?`))) return;
 
     try {
         const res = await fetch(`${API_URL}/productos/precios/masivo`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                porcentaje,
-                id_categoria: id_categoria || null,
-                id_proveedor: id_proveedor || null
-            })
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ porcentaje, id_categoria: id_categoria || null, id_proveedor: id_proveedor || null })
         });
 
         if (res.ok) {
-                mostrarToast("Precios actualizados exitosamente", "success");
-                modalPrecios.hide();
-                await cargarProductos();
-            } else {
-                mostrarToast("No se pudieron actualizar los precios", "danger");
-            }
-        } catch {
-            mostrarToast("Error de conexión al actualizar", "danger");
+            mostrarToast("Precios actualizados exitosamente", "success");
+            modalPrecios.hide();
+            await cargarProductos();
+        } else {
+            mostrarToast("No se pudieron actualizar los precios", "danger");
         }
-};
+    } catch { mostrarToast("Error de conexión al actualizar", "danger"); }
+}
 
-document.getElementById('form-nueva-cat').onsubmit = async (e) => {
+async function crearNuevaCategoria(e) {
     e.preventDefault();
     const input = document.getElementById('input-nueva-cat');
 
     try {
         const res = await fetch(`${API_URL}/categorias`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre_categoria: input.value })
         });
 
         if (res.ok) {
             input.value = '';
             await cargarCategorias();
-
             mostrarToast("Categoría creada", "success");
 
             const ultima = categorias[categorias.length - 1];
             document.getElementById('categoria').value = ultima.id_categoria;
 
             offcanvasCategorias.hide();
-
-            setTimeout(() => {
-                bootstrapModalProd.show(); 
-            }, 300);
+            setTimeout(() => { bootstrapModalProd.show(); }, 300);
         }
-
-    } catch {
-        mostrarToast("Error al crear categoría", "danger");
-    }
-};
-
-document.getElementById('es_pesable').addEventListener('change', function() {
-    const labelStock = document.querySelector('label[for="stock"]'); 
-    const inputStock = document.getElementById('stock');
-    
-    if (this.checked) {
-        inputStock.placeholder = "0.000 kg";
-    } else {
-        inputStock.placeholder = "";
-    }
-});
-
-document.getElementById('btn-logout').onclick = () => { localStorage.clear(); window.location.href = 'login.html'; };
+    } catch { mostrarToast("Error al crear categoría", "danger"); }
+}
