@@ -57,6 +57,7 @@ const mixtoTotal = document.getElementById('mixto-total');
 const mixtoEfectivo = document.getElementById('mixto-efectivo');
 const mixtoTransferencia = document.getElementById('mixto-transferencia');
 const modalTarjeta = new bootstrap.Modal(document.getElementById('modalTarjeta'));
+const tarjetaTotal = document.getElementById('tarjeta-total');
 
 function enviarATiqueteraLocal(venta) {
     fetch('http://localhost:3000/imprimir', {
@@ -510,20 +511,43 @@ document.addEventListener('keydown', (e) => {
 
 let selectCategoriaInicializado = false;
 
-window.abrirModalVentaRapida = async function () {
-    const modalEl = document.getElementById('modalVentaRapida');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+async function cargarCategoriasVentaRapida() {
+    try {
+        const res = await fetch(`${API_URL}/categorias`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-    document.getElementById("vr-descripcion").value = '';
-    document.getElementById("vr-monto").value = '';
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status}`);
+        }
 
-    await cargarCategoriasVentaRapida();
+        const categorias = await res.json();
+        const select = document.getElementById("vr-categoria");
 
-    $('#vr-categoria').val('').trigger('change');
+        select.innerHTML = `
+            <option value="">Seleccionar categoría</option>
+        ` + categorias.map(c => `
+            <option value="${c.id_categoria}">
+                ${c.nombre_categoria}
+            </option>
+        `).join('');
 
-    modal.show();
+        if (!selectCategoriaInicializado) {
 
-    document.getElementById("vr-descripcion").focus();
-};
+            $('#vr-categoria').select2({
+                dropdownParent: $('#modalVentaRapida'),
+                width: '100%',
+                placeholder: 'Buscar categoría'
+            });
+
+            selectCategoriaInicializado = true;
+        }
+
+    } catch (err) {
+        console.error("Error cargando categorías:", err);
+    }
+}
 
 inputCodigo.focus();
