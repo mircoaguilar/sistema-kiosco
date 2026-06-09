@@ -22,21 +22,27 @@ const btnConfirmarAccion = document.getElementById('btnConfirmarAccion');
 document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuario}`;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const $filtros = $('#filtro-categoria, #filtro-proveedor').select2({
+        width: '100%'
+    });
+
+    $('#filtro-categoria').off('change', aplicarFiltros);
+    $('#filtro-proveedor').off('change', aplicarFiltros);
 
     await cargarCategorias();
     await cargarProveedores();
     await cargarProductos(); 
 
-    $('#filtro-categoria, #filtro-proveedor').select2({
-        width: '100%'
-    });
-    $('#filtro-categoria').trigger('change');
-    $('#filtro-proveedor').trigger('change');
+    $('#filtro-categoria').on('change', aplicarFiltros);
+    $('#filtro-proveedor').on('change', aplicarFiltros);
+
+    $filtros.trigger('change.select2');
+
+    aplicarFiltros();
 
     const el = document.getElementById('offcanvasCategorias');
     if (el) {
         offcanvasCategorias = new bootstrap.Offcanvas(el);
-
         document.getElementById('btnAbrirCategorias').onclick = () => {
             bootstrapModalProd.hide();
             setTimeout(() => {
