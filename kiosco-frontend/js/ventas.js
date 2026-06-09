@@ -25,8 +25,10 @@ function aplicarPermisosMenu() {
 
 aplicarPermisosMenu();
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     aplicarPermisosMenu();
+
+    await cargarCategoriasVentaRapida();
 
     const errorPermiso = localStorage.getItem('toast_error');
 
@@ -307,21 +309,6 @@ async function procesarVenta(metodo) {
     }
 }
 
-function abrirModalVentaRapida() {
-    const modalEl = document.getElementById('modalVentaRapida');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-
-    document.getElementById("vr-descripcion").value = '';
-    document.getElementById("vr-monto").value = '';
-    document.getElementById("vr-categoria").value = '';
-
-    cargarCategoriasVentaRapida();
-
-    modal.show();
-
-    document.getElementById("vr-descripcion").focus();
-}
-
 function agregarVentaRapida() {
     const descripcion = document.getElementById("vr-descripcion").value.trim();
     const categoria = document.getElementById("vr-categoria").value;
@@ -536,5 +523,46 @@ document.getElementById('btn-logout').onclick = () => {
 document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName !== 'INPUT') inputCodigo.focus();
 });
+
+let selectCategoriaInicializado = false;
+
+async function cargarCategoriasVentaRapida() {
+    try {
+        const res = await fetch(`${API_URL}/categorias`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status}`);
+        }
+
+        const categorias = await res.json();
+        const select = document.getElementById("vr-categoria");
+
+        select.innerHTML = `
+            <option value="">Seleccionar categoría</option>
+        ` + categorias.map(c => `
+            <option value="${c.id_categoria}">
+                ${c.nombre_categoria}
+            </option>
+        `).join('');
+
+        if (!selectCategoriaInicializado) {
+
+            $('#vr-categoria').select2({
+                dropdownParent: $('#modalVentaRapida'),
+                width: '100%',
+                placeholder: 'Buscar categoría'
+            });
+
+            selectCategoriaInicializado = true;
+        }
+
+    } catch (err) {
+        console.error("Error cargando categorías:", err);
+    }
+}
 
 inputCodigo.focus();
