@@ -25,15 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cargarCategorias();
     await cargarProveedores();
     await cargarProductos();
-
-    $('#filtro-categoria').select2({
-        width: '100%'
-    });
-
-    $('#filtro-proveedor').select2({
-        width: '100%'
-    });
-
+    
     const el = document.getElementById('offcanvasCategorias');
 
     if (el) {
@@ -89,6 +81,12 @@ async function cargarCategorias() {
         const opts = categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
         document.getElementById('categoria').innerHTML = opts;
         document.getElementById('filtro-categoria').innerHTML = '<option value="">Todas las Categorías</option>' + opts;
+
+        if (!$('#filtro-categoria').hasClass('select2-hidden-accessible')) {
+            $('#filtro-categoria').select2({
+                width: '100%'
+            });
+        }
         
         document.getElementById('lista-categorias-gestion').innerHTML = categorias.map(c => `
             <li class="list-group-item d-flex justify-content-between align-items-center py-2 small">
@@ -119,6 +117,12 @@ async function cargarProveedores() {
             proveedores.map(p => `
                 <option value="${p.id_proveedor}">${p.nombre}</option>
             `).join('');
+
+            if (!$('#filtro-proveedor').hasClass('select2-hidden-accessible')) {
+            $('#filtro-proveedor').select2({
+                width: '100%'
+            });
+}
 
     } catch (error) {
         console.error("Error proveedores", error);
