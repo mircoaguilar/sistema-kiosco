@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnNuevoProd').onclick = async () => {
         limpiarFormulario();
         await cargarCategorias();
+
+        document.getElementById('contenedor-modo-rapido').style.display = 'block';
         bootstrapModalProd.show();
 
         $('#categoria, #proveedor').select2({
@@ -327,6 +329,7 @@ window.prepararEdicion = async (id) => {
     await cargarCategorias();
     editandoID = id;
     document.getElementById('modalTitulo').innerText = "Editar Producto";
+    document.getElementById('contenedor-modo-rapido').style.display = 'none';
     document.getElementById('codigo').value = p.codigo_barras || '';
     document.getElementById('nombre').value = p.nombre;
     document.getElementById('categoria').value = p.id_categoria;
