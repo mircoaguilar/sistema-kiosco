@@ -82,6 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         limpiarFormulario();
         await cargarCategorias();
         bootstrapModalProd.show();
+
+        $('#categoria, #proveedor').select2({
+            width: '100%',
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalProducto')
+        });
     };
 
     document.getElementById('btnSubaMasiva').onclick = async () => {
@@ -129,6 +135,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if ($('#filtro-cat-precio').data('select2')) $('#filtro-cat-precio').select2('destroy');
         if ($('#filtro-prov-precio').data('select2')) $('#filtro-prov-precio').select2('destroy');
         document.getElementById('porcentaje').value = ''; 
+    });
+
+    document.getElementById('modalProducto').addEventListener('hidden.bs.modal', () => {
+        if ($('#categoria').data('select2')) $('#categoria').select2('destroy');
+        if ($('#proveedor').data('select2')) $('#proveedor').select2('destroy');
     });
 
     document.getElementById('aplicarSuba').onclick = aplicarSubaMasiva;
@@ -328,6 +339,12 @@ window.prepararEdicion = async (id) => {
     document.getElementById('fecha_vencimiento').value = p.fecha_vencimiento || '';
     
     bootstrapModalProd.show();
+
+    $('#categoria, #proveedor').select2({
+        width: '100%',
+        theme: 'bootstrap-5',
+        dropdownParent: $('#modalProducto')
+    });
 };
 
 window.eliminarProducto = async (id) => {
@@ -518,14 +535,23 @@ async function crearNuevaCategoria(e) {
 
         if (res.ok) {
             input.value = '';
-            await cargarCategorias();
+            await cargarCategorias(); 
             mostrarToast("Categoría creada", "success");
 
             const ultima = categorias[categorias.length - 1];
             document.getElementById('categoria').value = ultima.id_categoria;
 
             offcanvasCategorias.hide();
-            setTimeout(() => { bootstrapModalProd.show(); }, 300);
+            
+            setTimeout(() => { 
+                bootstrapModalProd.show(); 
+                
+                $('#categoria, #proveedor').select2({
+                    width: '100%',
+                    theme: 'bootstrap-5',
+                    dropdownParent: $('#modalProducto')
+                });
+            }, 300);
         }
     } catch { mostrarToast("Error al crear categoría", "danger"); }
 }
