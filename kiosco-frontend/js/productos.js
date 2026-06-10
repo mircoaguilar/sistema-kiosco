@@ -100,9 +100,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             theme: 'bootstrap-5',
             dropdownParent: $('#modalPrecios')
         });
+
+        $('#filtro-cat-precio').off('change').on('change', function(e) {
+            if (e.originalEvent || e.target === document.activeElement || $(this).data('select2').isOpen()) {
+                const catSel = this.value;
+                const provSel = document.getElementById('filtro-prov-precio').value;
+                
+                actualizarFiltrosCruzadosPrecios(catSel, provSel);
+                $('#filtro-prov-precio').select2({ width: '100%', theme: 'bootstrap-5', dropdownParent: $('#modalPrecios') });
+            }
+        });
+
+        $('#filtro-prov-precio').off('change').on('change', function(e) {
+            if (e.originalEvent || e.target === document.activeElement || $(this).data('select2').isOpen()) {
+                const catSel = document.getElementById('filtro-cat-precio').value;
+                const provSel = this.value;
+
+                actualizarFiltrosCruzadosPrecios(catSel, provSel);
+                $('#filtro-cat-precio').select2({ width: '100%', theme: 'bootstrap-5', dropdownParent: $('#modalPrecios') });
+            }
+        });
     };
 
     document.getElementById('modalPrecios').addEventListener('hidden.bs.modal', () => {
+        $('#filtro-cat-precio').off('change');
+        $('#filtro-prov-precio').off('change');
+
         if ($('#filtro-cat-precio').data('select2')) $('#filtro-cat-precio').select2('destroy');
         if ($('#filtro-prov-precio').data('select2')) $('#filtro-prov-precio').select2('destroy');
         document.getElementById('porcentaje').value = ''; 
@@ -421,6 +444,42 @@ function actualizarFiltrosCruzados(catSeleccionada, provSeleccionado) {
     selectProv.innerHTML = htmlProvs;
 }
 
+function actualizarFiltrosCruzadosPrecios(catSeleccionada, provSeleccionado) {
+    const catsDisponibles = new Set();
+    productos.forEach(p => {
+        if (!provSeleccionado || p.id_proveedor == provSeleccionado) {
+            if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
+        }
+    });
+
+    const provsDisponibles = new Set();
+    productos.forEach(p => {
+        if (!catSeleccionada || p.id_categoria == catSeleccionada) {
+            if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+        }
+    });
+
+    const selectCat = document.getElementById('filtro-cat-precio');
+    let htmlCats = '<option value="">Todas las Categorías</option>';
+    categorias.forEach(c => {
+        if (catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)) {
+            const esSelected = Number(c.id_categoria) === Number(catSeleccionada) ? 'selected' : '';
+            htmlCats += `<option value="${c.id_categoria}" ${esSelected}>${c.nombre_categoria}</option>`;
+        }
+    });
+    selectCat.innerHTML = htmlCats;
+
+    const selectProv = document.getElementById('filtro-prov-precio');
+    let htmlProvs = '<option value="">Todos los Proveedores</option>';
+    proveedores.forEach(p => {
+        if (provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)) {
+            const esSelected = Number(p.id_proveedor) === Number(provSeleccionado) ? 'selected' : '';
+            htmlProvs += `<option value="${p.id_proveedor}" ${esSelected}>${p.nombre}</option>`;
+        }
+    });
+    selectProv.innerHTML = htmlProvs;
+}
+
 async function aplicarSubaMasiva() {
     const porcentaje = parseFloat(document.getElementById('porcentaje').value);
     const id_categoria = document.getElementById('filtro-cat-precio').value;
@@ -470,3 +529,4 @@ async function crearNuevaCategoria(e) {
         }
     } catch { mostrarToast("Error al crear categoría", "danger"); }
 }
+
