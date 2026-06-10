@@ -42,14 +42,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         theme: 'bootstrap-5' 
     });
 
-    $('#filtro-categoria').on('change', function() {
-        aplicarFiltros();
-        $('#filtro-proveedor').select2({ width: '100%', theme: 'bootstrap-5' }); 
+    $('#filtro-categoria').on('change', function(e) {
+        if (e.originalEvent || e.target === document.activeElement || $(this).data('select2').isOpen()) {
+            aplicarFiltros();
+            $('#filtro-proveedor').select2({ width: '100%', theme: 'bootstrap-5' }); 
+        }
     });
 
-    $('#filtro-proveedor').on('change', function() {
-        aplicarFiltros();
-        $('#filtro-categoria').select2({ width: '100%', theme: 'bootstrap-5' }); 
+    $('#filtro-proveedor').on('change', function(e) {
+        if (e.originalEvent || e.target === document.activeElement || $(this).data('select2').isOpen()) {
+            aplicarFiltros();
+            $('#filtro-categoria').select2({ width: '100%', theme: 'bootstrap-5' }); 
+        }
     });
 
     $('#filtro-categoria').trigger('change');
@@ -370,44 +374,39 @@ function aplicarFiltros() {
 }
 
 function actualizarFiltrosCruzados(catSeleccionada, provSeleccionado) {
+    const catsDisponibles = new Set();
+    productos.forEach(p => {
+        if (!provSeleccionado || p.id_proveedor == provSeleccionado) {
+            if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
+        }
+    });
 
-    if (!catSeleccionada) {
-        const provsDisponibles = new Set();
-        productos.forEach(p => {
-            if (!provSeleccionado || p.id_proveedor == provSeleccionado) {
-                if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
-            }
-        });
+    const provsDisponibles = new Set();
+    productos.forEach(p => {
+        if (!catSeleccionada || p.id_categoria == catSeleccionada) {
+            if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+        }
+    });
 
-        const selectProv = document.getElementById('filtro-proveedor');
-        let options = '<option value="">Todos los Proveedores</option>';
-        proveedores.forEach(p => {
-            if (provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)) {
-                const checked = Number(p.id_proveedor) === Number(provSeleccionado) ? 'selected' : '';
-                options += `<option value="${p.id_proveedor}" ${checked}>${p.nombre}</option>`;
-            }
-        });
-        selectProv.innerHTML = options;
-    }
+    const selectCat = document.getElementById('filtro-categoria');
+    let htmlCats = '<option value="">Todas las Categorías</option>';
+    categorias.forEach(c => {
+        if (catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)) {
+            const esSelected = Number(c.id_categoria) === Number(catSeleccionada) ? 'selected' : '';
+            htmlCats += `<option value="${c.id_categoria}" ${esSelected}>${c.nombre_categoria}</option>`;
+        }
+    });
+    selectCat.innerHTML = htmlCats;
 
-    if (!provSeleccionado) {
-        const catsDisponibles = new Set();
-        productos.forEach(p => {
-            if (!catSeleccionada || p.id_categoria == catSeleccionada) {
-                if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
-            }
-        });
-
-        const selectCat = document.getElementById('filtro-categoria');
-        let options = '<option value="">Todas las Categorías</option>';
-        categorias.forEach(c => {
-            if (catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)) {
-                const checked = Number(c.id_categoria) === Number(catSeleccionada) ? 'selected' : '';
-                options += `<option value="${c.id_categoria}" ${checked}>${c.nombre_categoria}</option>`;
-            }
-        });
-        selectCat.innerHTML = options;
-    }
+    const selectProv = document.getElementById('filtro-proveedor');
+    let htmlProvs = '<option value="">Todos los Proveedores</option>';
+    proveedores.forEach(p => {
+        if (provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)) {
+            const esSelected = Number(p.id_proveedor) === Number(provSeleccionado) ? 'selected' : '';
+            htmlProvs += `<option value="${p.id_proveedor}" ${esSelected}>${p.nombre}</option>`;
+        }
+    });
+    selectProv.innerHTML = htmlProvs;
 }
 
 async function aplicarSubaMasiva() {
