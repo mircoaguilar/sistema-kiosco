@@ -55,6 +55,20 @@
         .offcanvas {
             width: 350px !important;
         }
+        #modalConfirm {
+            z-index: 1080 !important;
+        }
+        .modal-backdrop:nth-of-type(even) {
+            z-index: 1075 !important;
+            opacity: 0.3 !important; 
+        }
+        body.modal-open #modalPrecios.show {
+            filter: blur(1px);
+            transition: filter 0.2s ease;
+        }
+        body.modal-open #modalConfirm:not(.show) ~ #modalPrecios {
+            filter: none;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -320,15 +334,20 @@
         </div>
      </div>
 
-    <div class="modal fade" id="modalConfirm" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Confirmar acción</h5></div>
-            <div class="modal-body" id="modalConfirmMsg">¿Estás seguro?</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarAccion">Confirmar</button>
-            </div>
+    <div class="modal fade" id="modalConfirm" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered modal-sm"> <div class="modal-content border-danger shadow-lg"> <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title small fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Atención</h5>
+                </div>
+
+                <div class="modal-body text-center py-3">
+                    <p class="mb-0 fw-semibold text-dark" id="modalConfirmMsg">¿Estás seguro?</p>
+                </div>
+
+                <div class="modal-footer bg-light justify-content-center py-2">
+                    <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">No, cancelar</button>
+                    <button type="button" class="btn btn-sm btn-danger px-3" id="btnConfirmarAccion">Sí, confirmar</button>
+                </div>
+
             </div>
         </div>
     </div>
