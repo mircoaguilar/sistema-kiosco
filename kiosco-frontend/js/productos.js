@@ -86,15 +86,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btnSubaMasiva').onclick = async () => {
         document.getElementById('filtro-cat-precio').innerHTML =
-            '<option value="">Todas</option>' +
+            '<option value="">Todas las Categorías</option>' +
             categorias.map(c => `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`).join('');
 
         document.getElementById('filtro-prov-precio').innerHTML =
-            '<option value="">Todos</option>' +
+            '<option value="">Todos los Proveedores</option>' +
             proveedores.map(p => `<option value="${p.id_proveedor}">${p.nombre}</option>`).join('');
 
         modalPrecios.show();
+
+        $('#filtro-cat-precio, #filtro-prov-precio').select2({
+            width: '100%',
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalPrecios')
+        });
     };
+
+    document.getElementById('modalPrecios').addEventListener('hidden.bs.modal', () => {
+        if ($('#filtro-cat-precio').data('select2')) $('#filtro-cat-precio').select2('destroy');
+        if ($('#filtro-prov-precio').data('select2')) $('#filtro-prov-precio').select2('destroy');
+        document.getElementById('porcentaje').value = ''; 
+    });
 
     document.getElementById('aplicarSuba').onclick = aplicarSubaMasiva;
     document.getElementById('form-nueva-cat').onsubmit = crearNuevaCategoria;
