@@ -125,7 +125,7 @@ async function abrirEditarUsuario(id) {
         document.getElementById('usuario').value = usuario.usuario;
         document.getElementById('password').value = '';
         document.getElementById('rol').value = usuario.rol;
-        document.getElementById('estado').value = usuario.estado;
+        document.getElementById('estado').value = usuario.estado ? '1' : '0';
 
         document.getElementById('grupoEstado').style.display = 'block';
 
@@ -150,7 +150,7 @@ async function guardarUsuario(e) {
     };
 
     if (id) {
-        payload.estado = parseInt(document.getElementById('estado').value);
+        payload.estado = document.getElementById('estado').value === '1';
     }
 
     try {
@@ -243,7 +243,7 @@ function filtrarUsuarios() {
         const coincideRol = !rol || usuario.rol === rol;
         const coincideEstado =
         estado === '' ||
-        usuario.estado.toString() === (estado === '1' ? 'true' : 'false');
+        usuario.estado === (estado === '1');
 
         return coincideTexto && coincideRol && coincideEstado;
     });
