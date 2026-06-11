@@ -6,6 +6,8 @@
     <title>Inventario</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/bootstrap-icons.min.css">
+    <link href="/css/select2.min.css" rel="stylesheet">
+    <link href="/css/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     <script>
         const authToken = localStorage.getItem('jwt_token');
         const rol = localStorage.getItem('rol');
@@ -52,6 +54,29 @@
         }
         .offcanvas {
             width: 350px !important;
+        }
+        .select2-container--open { 
+            z-index: 1065 !important; 
+        }
+        .input-group > .select2-container--bootstrap-5 {
+            position: relative;
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
+
+        .input-group > .select2-container--bootstrap-5 .select2-selection {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+        #modalConfirm {
+            z-index: 1090 !important;
+        }
+        #modalConfirm.show ~ .modal-backdrop {
+            z-index: 1085 !important;
+            opacity: 0.4 !important;
+        }
+        body.modal-open #modalPrecios.show {
+            transition: filter 0.15s ease;
         }
     </style>
 </head>
@@ -248,12 +273,12 @@
                         </div>
                     </div>
                     <div class="modal-footer bg-light d-flex justify-content-between">
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch" id="contenedor-modo-rapido">
                             <input class="form-check-input" type="checkbox" id="modo-rapido" checked>
                             <label class="form-check-label small fw-bold">Modo Rápido</label>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancelar</button>
                             <button type="submit" class="btn btn-primary px-4 fw-bold">Guardar</button>
                         </div>
                     </div>
@@ -318,15 +343,20 @@
         </div>
      </div>
 
-    <div class="modal fade" id="modalConfirm" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Confirmar acción</h5></div>
-            <div class="modal-body" id="modalConfirmMsg">¿Estás seguro?</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarAccion">Confirmar</button>
-            </div>
+    <div class="modal fade" id="modalConfirm" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered modal-sm"> <div class="modal-content border-danger shadow-lg"> <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title small fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Atención</h5>
+                </div>
+
+                <div class="modal-body text-center py-3">
+                    <p class="mb-0 fw-semibold text-dark" id="modalConfirmMsg">¿Estás seguro?</p>
+                </div>
+
+                <div class="modal-footer bg-light justify-content-center py-2">
+                    <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">No, cancelar</button>
+                    <button type="button" class="btn btn-sm btn-danger px-3" id="btnConfirmarAccion">Sí, confirmar</button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -334,6 +364,9 @@
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
 
     <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/select2.min.js"></script>
+
     <script src="/js/config.js"></script>
     <script src="/js/productos.js"></script>
 </body>
