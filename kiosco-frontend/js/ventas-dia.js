@@ -5,7 +5,6 @@
 })();
 
 const API_URL = window.APP_CONFIG.API_URL;
-
 const token = localStorage.getItem('jwt_token');
 const nombreUsuario = localStorage.getItem('nombre_usuario') || 'Usuario';
 
@@ -13,6 +12,9 @@ document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuari
 
 const tabla = document.getElementById('tabla-reporte');
 const totalDiaHTML = document.getElementById('total-dia');
+
+let todasLasCategorias = [];
+let todosLosProveedores = [];
 
 async function cargarFiltros() {
     try {
@@ -25,19 +27,10 @@ async function cargarFiltros() {
             })
         ]);
 
-        const categorias = await catRes.json();
-        const proveedores = await provRes.json();
+        todasLasCategorias = await catRes.json();
+        todosLosProveedores = await provRes.json();
 
-        const selectCat = document.getElementById('filtro-categoria');
-        const selectProv = document.getElementById('filtro-proveedor');
-
-        selectCat.innerHTML += categorias.map(c => 
-            `<option value="${c.id_categoria}">${c.nombre_categoria}</option>`
-        ).join('');
-
-        selectProv.innerHTML += proveedores.map(p => 
-            `<option value="${p.id_proveedor}">${p.nombre}</option>`
-        ).join('');
+        actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores);
 
     } catch (error) {
         console.error(error);
@@ -77,6 +70,7 @@ async function cargarReporte() {
 
         renderTabla(data.productos);
         renderResumen(data.resumen);
+        actualizarFiltrosCruzados(data.productos, categoria, proveedor);
 
     } catch (error) {
         console.error(error);
@@ -106,7 +100,7 @@ function renderTabla(productos) {
     tabla.innerHTML = productos.map(p => `
         <tr>
             <td class="fw-bold">${p.nombre}</td>
-            <td>${p.categoria || '-'}</td>
+            <td><span class="badge bg-light text-dark border">${p.categoria || 'General'}</span></td>
             <td>${p.proveedor || '-'}</td>
             <td>${parseFloat(p.cantidad)}</td>
             <td class="fw-bold text-success">
@@ -126,29 +120,65 @@ function formatearMoneda(valor) {
 function renderResumen(resumen) {
     if (!resumen) return;
 
-    totalDiaHTML.innerText =
-        `$${formatearMoneda(resumen.total_dia || 0)}`;
+    totalDiaHTML.innerText = `$${formatearMoneda(resumen.total_dia || 0)}`;
 
     const ventasHTML = document.getElementById('cantidad-ventas');
     if (ventasHTML) {
         ventasHTML.innerText = resumen.cantidad_ventas || 0;
     }
 
-    document.getElementById('total-efectivo').innerText =
-        `$${formatearMoneda(resumen.total_efectivo || 0)}`;
-
-    document.getElementById('total-transferencia').innerText =
-        `$${formatearMoneda(resumen.total_transferencia || 0)}`;
-
-    document.getElementById('total-tarjeta').innerText =
-        `$${formatearMoneda(resumen.total_tarjeta || 0)}`;
+    document.getElementById('total-efectivo').innerText = `$${formatearMoneda(resumen.total_efectivo || 0)}`;
+    document.getElementById('total-transferencia').innerText = `$${formatearMoneda(resumen.total_transferencia || 0)}`;
+    document.getElementById('total-tarjeta').innerText = `$${formatearMoneda(resumen.total_tarjeta || 0)}`;
 }
 
+function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSeleccionado) {
+    if (!productosTraidos || productosTraidos.length === 0) {
+        actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores, catSeleccionada, provSeleccionado);
+        return;
+    }
+
+    const catsDisponibles = new Set();
+    const provsDisponibles = new Set();
+
+    productosTraidos.forEach(p => {
+        if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
+        if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+    });
+
+    const categoriasFiltradas = todasLasCategorias.filter(c => 
+        provSeleccionado === '' ? true : catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)
+    );
+
+    const proveedoresFiltrados = todosLosProveedores.filter(p => 
+        catSeleccionada === '' ? true : provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)
+    );
+
+    actualizarSelectoresOpciones(categoriasFiltradas, proveedoresFiltrados, catSeleccionada, provSeleccionado);
+}
+
+function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '') {
+    const selectCat = document.getElementById('filtro-categoria');
+    const selectProv = document.getElementById('filtro-proveedor');
+
+    let htmlCats = '<option value="">Todas las categorías</option>';
+    htmlCats += listaCats.map(c => {
+        const selected = Number(c.id_categoria) === Number(catSel) ? 'selected' : '';
+        return `<option value="${c.id_categoria}" ${selected}>${c.nombre_categoria}</option>`;
+    }).join('');
+    selectCat.innerHTML = htmlCats;
+
+    let htmlProvs = '<option value="">Todos los proveedores</option>';
+    htmlProvs += listaProvs.map(p => {
+        const selected = Number(p.id_proveedor) === Number(provSel) ? 'selected' : '';
+        return `<option value="${p.id_proveedor}" ${selected}>${p.nombre}</option>`;
+    }).join('');
+    selectProv.innerHTML = htmlProvs;
+
+    $('#filtro-categoria, #filtro-proveedor').select2({ width: '100%', theme: 'bootstrap-5' });
+}
 
 document.getElementById('btn-limpiar').addEventListener('click', () => {
-    document.getElementById('filtro-categoria').value = '';
-    document.getElementById('filtro-proveedor').value = '';
-
     const d = new Date();
     const hoy = d.getFullYear() + '-' +
         String(d.getMonth() + 1).padStart(2, '0') + '-' +
@@ -159,6 +189,9 @@ document.getElementById('btn-limpiar').addEventListener('click', () => {
     document.getElementById('filtro-hora-desde').value = '';
     document.getElementById('filtro-hora-hasta').value = '';
 
+    $('#filtro-categoria').val('').trigger('change.select2');
+    $('#filtro-proveedor').val('').trigger('change.select2');
+
     cargarReporte();
 });
 
@@ -168,7 +201,6 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-
     const d = new Date();
     const hoy = d.getFullYear() + '-' +
         String(d.getMonth() + 1).padStart(2, '0') + '-' +
@@ -177,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filtro-desde').value = hoy;
     document.getElementById('filtro-hasta').value = hoy;
 
-    const horaDesde = flatpickr("#filtro-hora-desde", {
+    flatpickr("#filtro-hora-desde", {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i",
@@ -185,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         onChange: cargarReporte
     });
 
-    const horaHasta = flatpickr("#filtro-hora-hasta", {
+    flatpickr("#filtro-hora-hasta", {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i",
@@ -193,8 +225,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         onChange: cargarReporte
     });
 
-    document.getElementById('filtro-categoria').addEventListener('change', cargarReporte);
-    document.getElementById('filtro-proveedor').addEventListener('change', cargarReporte);
+    $('#filtro-categoria, #filtro-proveedor').on('change', function (e) {
+        if (e.originalEvent || e.target === document.activeElement || $(this).data('select2').isOpen()) {
+            cargarReporte();
+        }
+    });
+
     document.getElementById('filtro-desde').addEventListener('change', cargarReporte);
     document.getElementById('filtro-hasta').addEventListener('change', cargarReporte);
 
