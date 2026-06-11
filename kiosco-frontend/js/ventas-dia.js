@@ -133,49 +133,51 @@ function renderResumen(resumen) {
 }
 
 function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSeleccionado) {
-    if (!productosTraidos || productosTraidos.length === 0) {
-        actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores, catSeleccionada, provSeleccionado);
-        return;
-    }
-
     const catsDisponibles = new Set();
     const provsDisponibles = new Set();
 
-    productosTraidos.forEach(p => {
-        if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
-        if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
-    });
+    if (productosTraidos && productosTraidos.length > 0) {
+        productosTraidos.forEach(p => {
+            if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
+            if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+        });
+    }
 
-    const categoriasFiltradas = todasLasCategorias.filter(c => 
-        provSeleccionado === '' ? true : catsDisponibles.has(Number(c.id_categoria)) || Number(c.id_categoria) === Number(catSeleccionada)
-    );
-
-    const proveedoresFiltrados = todosLosProveedores.filter(p => 
-        catSeleccionada === '' ? true : provsDisponibles.has(Number(p.id_proveedor)) || Number(p.id_proveedor) === Number(provSeleccionado)
-    );
-
-    actualizarSelectoresOpciones(categoriasFiltradas, proveedoresFiltrados, catSeleccionada, provSeleccionado);
+    actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores, catSeleccionada, provSeleccionado, catsDisponibles, provsDisponibles);
 }
 
-function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '') {
+function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '', catsDisponibles = new Set(), provsDisponibles = new Set()) {
     const selectCat = document.getElementById('filtro-categoria');
     const selectProv = document.getElementById('filtro-proveedor');
 
     let htmlCats = '<option value="">Todas las categorías</option>';
     htmlCats += listaCats.map(c => {
-        const selected = Number(c.id_categoria) === Number(catSel) ? 'selected' : '';
-        return `<option value="${c.id_categoria}" ${selected}>${c.nombre_categoria}</option>`;
+        const id = Number(c.id_categoria);
+        const selected = id === Number(catSel) ? 'selected' : '';
+        const tieneVentas = provSel === '' || catsDisponibles.has(id) || id === Number(catSel);
+        const label = tieneVentas ? c.nombre_categoria : `${c.nombre_categoria} (Sin ventas)`;
+        const disabled = tieneVentas ? '' : 'disabled';
+
+        return `<option value="${c.id_categoria}" ${selected} ${disabled}>${label}</option>`;
     }).join('');
     selectCat.innerHTML = htmlCats;
 
     let htmlProvs = '<option value="">Todos los proveedores</option>';
     htmlProvs += listaProvs.map(p => {
-        const selected = Number(p.id_proveedor) === Number(provSel) ? 'selected' : '';
-        return `<option value="${p.id_proveedor}" ${selected}>${p.nombre}</option>`;
+        const id = Number(p.id_proveedor);
+        const selected = id === Number(provSel) ? 'selected' : '';
+        const tieneVentas = catSel === '' || provsDisponibles.has(id) || id === Number(provSel);
+        const label = tieneVentas ? p.nombre : `${p.nombre} (Sin ventas)`;
+        const disabled = tieneVentas ? '' : 'disabled';
+
+        return `<option value="${p.id_proveedor}" ${selected} ${disabled}>${label}</option>`;
     }).join('');
     selectProv.innerHTML = htmlProvs;
 
-    $('#filtro-categoria, #filtro-proveedor').select2({ width: '100%', theme: 'bootstrap-5' });
+    $('#filtro-categoria, #filtro-proveedor').select2({ 
+        width: '100%', 
+        theme: 'bootstrap-5' 
+    });
 }
 
 document.getElementById('btn-limpiar').addEventListener('click', () => {
