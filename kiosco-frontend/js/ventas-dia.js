@@ -143,38 +143,34 @@ function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSelecc
         });
     }
 
-    actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores, catSeleccionada, provSeleccionado, catsDisponibles, provsDisponibles);
+    const categoriasFiltradas = todasLasCategorias.filter(c => {
+        const nombreCat = c.nombre_categoria.trim().toLowerCase();
+        return provSeleccionado === '' || catsDisponibles.has(nombreCat) || Number(c.id_categoria) === Number(catSeleccionada);
+    });
+
+    const proveedoresFiltrados = todosLosProveedores.filter(p => {
+        const nombreProv = p.nombre.trim().toLowerCase();
+        return catSeleccionada === '' || provsDisponibles.has(nombreProv) || Number(p.id_proveedor) === Number(provSeleccionado);
+    });
+
+    actualizarSelectoresOpciones(categoriasFiltradas, proveedoresFiltrados, catSeleccionada, provSeleccionado);
 }
 
-function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '', catsDisponibles = new Set(), provsDisponibles = new Set()) {
+function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '') {
     const selectCat = document.getElementById('filtro-categoria');
     const selectProv = document.getElementById('filtro-proveedor');
 
     let htmlCats = '<option value="">Todas las categorías</option>';
     htmlCats += listaCats.map(c => {
-        const id = Number(c.id_categoria);
-        const selected = id === Number(catSel) ? 'selected' : '';
-        const nombreBuscado = c.nombre_categoria.trim().toLowerCase();
-        const tieneVentas = provSel === '' || catsDisponibles.has(nombreBuscado) || id === Number(catSel);
-        const label = tieneVentas ? c.nombre_categoria : `${c.nombre_categoria} (Sin ventas)`;
-        const disabled = tieneVentas ? '' : 'disabled';
-
-        return `<option value="${c.id_categoria}" ${selected} ${disabled}>${label}</option>`;
+        const selected = Number(c.id_categoria) === Number(catSel) ? 'selected' : '';
+        return `<option value="${c.id_categoria}" ${selected}>${c.nombre_categoria}</option>`;
     }).join('');
     selectCat.innerHTML = htmlCats;
 
     let htmlProvs = '<option value="">Todos los proveedores</option>';
     htmlProvs += listaProvs.map(p => {
-        const id = Number(p.id_proveedor);
-        const selected = id === Number(provSel) ? 'selected' : '';
-        
-        const nombreBuscado = p.nombre.trim().toLowerCase();
-        const tieneVentas = catSel === '' || provsDisponibles.has(nombreBuscado) || id === Number(provSel);
-        
-        const label = tieneVentas ? p.nombre : `${p.nombre} (Sin ventas)`;
-        const disabled = tieneVentas ? '' : 'disabled';
-
-        return `<option value="${p.id_proveedor}" ${selected} ${disabled}>${label}</option>`;
+        const selected = Number(p.id_proveedor) === Number(provSel) ? 'selected' : '';
+        return `<option value="${p.id_proveedor}" ${selected}>${p.nombre}</option>`;
     }).join('');
     selectProv.innerHTML = htmlProvs;
 
