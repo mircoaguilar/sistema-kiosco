@@ -70,6 +70,7 @@ async function cargarReporte() {
 
         renderTabla(data.productos);
         renderResumen(data.resumen);
+        
         actualizarFiltrosCruzados(data.productos, categoria, proveedor);
 
     } catch (error) {
@@ -133,25 +134,41 @@ function renderResumen(resumen) {
 }
 
 function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSeleccionado) {
-    const catsDisponibles = new Set();
-    const provsDisponibles = new Set();
+    let categoriasFiltradas = [...todasLasCategorias];
+    let proveedoresFiltrados = [...todosLosProveedores];
 
+    const catsConVentas = new Set();
+    const provsConVentas = new Set();
+    
     if (productosTraidos && productosTraidos.length > 0) {
         productosTraidos.forEach(p => {
-            if (p.categoria) catsDisponibles.add(p.categoria.trim().toLowerCase());
-            if (p.proveedor) provsDisponibles.add(p.proveedor.trim().toLowerCase());
+            if (p.categoria) catsConVentas.add(p.categoria.trim().toLowerCase());
+            if (p.proveedor) provsConVentas.add(p.proveedor.trim().toLowerCase());
         });
     }
 
-    const categoriasFiltradas = todasLasCategorias.filter(c => {
-        const nombreCat = c.nombre_categoria.trim().toLowerCase();
-        return provSeleccionado === '' || catsDisponibles.has(nombreCat) || Number(c.id_categoria) === Number(catSeleccionada);
-    });
+    if (catSeleccionada !== '' && provSeleccionado === '') {
+        proveedoresFiltrados = todosLosProveedores.filter(p => {
+            const nombreProv = p.nombre.trim().toLowerCase();
+            return provsConVentas.has(nombreProv);
+        });
+    }
 
-    const proveedoresFiltrados = todosLosProveedores.filter(p => {
-        const nombreProv = p.nombre.trim().toLowerCase();
-        return catSeleccionada === '' || provsDisponibles.has(nombreProv) || Number(p.id_proveedor) === Number(provSeleccionado);
-    });
+    if (provSeleccionado !== '' && catSeleccionada === '') {
+        categoriasFiltradas = todasLasCategorias.filter(c => {
+            const nombreCat = c.nombre_categoria.trim().toLowerCase();
+            return catsConVentas.has(nombreCat);
+        });
+    }
+
+    if (catSeleccionada !== '' && provSeleccionado !== '') {
+        const nombreCatElegida = todasLasCategorias.find(c => Number(c.id_categoria) === Number(catSeleccionada))
+                                    ?.nombre_categoria.trim().toLowerCase();
+        proveedoresFiltrados = todosLosProveedores.filter(p => {
+            const nombreProv = p.nombre.trim().toLowerCase();
+            return Number(p.id_proveedor) === Number(provSeleccionado) || provsConVentas.has(nombreProv);
+        });
+    }
 
     actualizarSelectoresOpciones(categoriasFiltradas, proveedoresFiltrados, catSeleccionada, provSeleccionado);
 }
