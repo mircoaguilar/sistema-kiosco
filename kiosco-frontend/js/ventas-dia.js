@@ -138,8 +138,8 @@ function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSelecc
 
     if (productosTraidos && productosTraidos.length > 0) {
         productosTraidos.forEach(p => {
-            if (p.id_categoria) catsDisponibles.add(Number(p.id_categoria));
-            if (p.id_proveedor) provsDisponibles.add(Number(p.id_proveedor));
+            if (p.categoria_id) catsDisponibles.add(Number(p.categoria_id));
+            if (p.proveedor_id) provsDisponibles.add(Number(p.proveedor_id));
         });
     }
 
