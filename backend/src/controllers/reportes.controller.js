@@ -219,6 +219,136 @@ const reportesController = {
                 details: error.message
             });
         }
+    },
+    filtrosDisponibles: async (req, res) => {
+        try {
+            const {
+                categoria,
+                proveedor,
+                desde,
+                hasta,
+                hora_desde,
+                hora_hasta
+            } = req.query;
+
+            let fechaInicio = null;
+            let fechaFin = null;
+
+            if (desde) {
+                fechaInicio = `${desde} ${hora_desde || '00:00:00'}`;
+            }
+
+            if (hasta) {
+                fechaFin = `${hasta} ${hora_hasta || '23:59:59'}`;
+            }
+
+            let filtrosCategorias = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+
+            let paramsCategorias = [];
+
+            if (fechaInicio && fechaFin) {
+                filtrosCategorias += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                paramsCategorias.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosCategorias += ` AND v.fecha_hora >= $1`;
+                paramsCategorias.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosCategorias += ` AND v.fecha_hora <= $1`;
+                paramsCategorias.push(fechaFin);
+
+            } else {
+                filtrosCategorias += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            }
+
+            if (proveedor) {
+                filtrosCategorias += `
+                    AND p.id_proveedor = $${paramsCategorias.length + 1}
+                `;
+                paramsCategorias.push(proveedor);
+            }
+
+            const categoriasResult = await db.query(`
+                SELECT DISTINCT
+                    c.id_categoria,
+                    c.nombre_categoria
+                FROM detalle_ventas dv
+                LEFT JOIN productos p
+                    ON dv.id_producto = p.id_producto
+                LEFT JOIN categorias c
+                    ON c.id_categoria = COALESCE(
+                        p.id_categoria,
+                        dv.id_categoria
+                    )
+                JOIN ventas v
+                    ON v.id_venta = dv.id_venta
+                ${filtrosCategorias}
+                ORDER BY c.nombre_categoria
+            `, paramsCategorias);
+
+            let filtrosProveedores = `
+                WHERE COALESCE(v.estado, 'activa') = 'activa'
+            `;
+
+            let paramsProveedores = [];
+
+            if (fechaInicio && fechaFin) {
+                filtrosProveedores += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                paramsProveedores.push(fechaInicio, fechaFin);
+
+            } else if (fechaInicio) {
+                filtrosProveedores += ` AND v.fecha_hora >= $1`;
+                paramsProveedores.push(fechaInicio);
+
+            } else if (fechaFin) {
+                filtrosProveedores += ` AND v.fecha_hora <= $1`;
+                paramsProveedores.push(fechaFin);
+
+            } else {
+                filtrosProveedores += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+            }
+
+            if (categoria) {
+                filtrosProveedores += `
+                    AND (
+                        p.id_categoria = $${paramsProveedores.length + 1}
+                        OR dv.id_categoria = $${paramsProveedores.length + 1}
+                    )
+                `;
+
+                paramsProveedores.push(categoria);
+            }
+
+            const proveedoresResult = await db.query(`
+                SELECT DISTINCT
+                    pr.id_proveedor,
+                    pr.nombre
+                FROM detalle_ventas dv
+                LEFT JOIN productos p
+                    ON dv.id_producto = p.id_producto
+                LEFT JOIN proveedores pr
+                    ON p.id_proveedor = pr.id_proveedor
+                JOIN ventas v
+                    ON v.id_venta = dv.id_venta
+                ${filtrosProveedores}
+                AND pr.id_proveedor IS NOT NULL
+                ORDER BY pr.nombre
+            `, paramsProveedores);
+
+            return res.json({
+                categorias: categoriasResult.rows,
+                proveedores: proveedoresResult.rows
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                error: 'Error obteniendo filtros',
+                details: error.message
+            });
+        }
     }
 };
 

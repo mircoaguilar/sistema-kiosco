@@ -13,30 +13,6 @@ document.getElementById('nombre-vendedor').innerText = `Vendedor: ${nombreUsuari
 const tabla = document.getElementById('tabla-reporte');
 const totalDiaHTML = document.getElementById('total-dia');
 
-let todasLasCategorias = [];
-let todosLosProveedores = [];
-
-async function cargarFiltros() {
-    try {
-        const [catRes, provRes] = await Promise.all([
-            fetch(`${API_URL}/categorias`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }),
-            fetch(`${API_URL}/proveedores`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-        ]);
-
-        todasLasCategorias = await catRes.json();
-        todosLosProveedores = await provRes.json();
-
-        actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores);
-
-    } catch (error) {
-        console.error(error);
-    }
-}
-
 async function cargarReporte() {
     try {
         const desde = document.getElementById('filtro-desde').value;
@@ -71,7 +47,7 @@ async function cargarReporte() {
         renderTabla(data.productos);
         renderResumen(data.resumen);
         
-        actualizarFiltrosCruzados(data.productos, categoria, proveedor);
+        await cargarFiltrosDisponibles();
 
     } catch (error) {
         console.error(error);
@@ -133,44 +109,43 @@ function renderResumen(resumen) {
     document.getElementById('total-tarjeta').innerText = `$${formatearMoneda(resumen.total_tarjeta || 0)}`;
 }
 
-function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSeleccionado) {
-    let categoriasFiltradas = [...todasLasCategorias];
-    let proveedoresFiltrados = [...todosLosProveedores];
+async function cargarFiltrosDisponibles() {
+    const categoria = document.getElementById('filtro-categoria').value;
+    const proveedor = document.getElementById('filtro-proveedor').value;
+    const desde = document.getElementById('filtro-desde').value;
+    const hasta = document.getElementById('filtro-hasta').value;
+    const horaDesde = document.getElementById('filtro-hora-desde').value;
+    const horaHasta = document.getElementById('filtro-hora-hasta').value;
 
-    const catsConVentas = new Set();
-    const provsConVentas = new Set();
-    
-    if (productosTraidos && productosTraidos.length > 0) {
-        productosTraidos.forEach(p => {
-            if (p.categoria) catsConVentas.add(p.categoria.trim().toLowerCase());
-            if (p.proveedor) provsConVentas.add(p.proveedor.trim().toLowerCase());
-        });
+    let url = `${API_URL}/reportes/filtros-disponibles`;
+
+    const params = [];
+
+    if (categoria) params.push(`categoria=${categoria}`);
+    if (proveedor) params.push(`proveedor=${proveedor}`);
+    if (desde) params.push(`desde=${desde}`);
+    if (hasta) params.push(`hasta=${hasta}`);
+    if (horaDesde) params.push(`hora_desde=${horaDesde}`);
+    if (horaHasta) params.push(`hora_hasta=${horaHasta}`);
+
+    if (params.length) {
+        url += '?' + params.join('&');
     }
 
-    if (catSeleccionada !== '' && provSeleccionado === '') {
-        proveedoresFiltrados = todosLosProveedores.filter(p => {
-            const nombreProv = p.nombre.trim().toLowerCase();
-            return provsConVentas.has(nombreProv);
-        });
-    }
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
 
-    if (provSeleccionado !== '' && catSeleccionada === '') {
-        categoriasFiltradas = todasLasCategorias.filter(c => {
-            const nombreCat = c.nombre_categoria.trim().toLowerCase();
-            return catsConVentas.has(nombreCat);
-        });
-    }
+    const data = await res.json();
 
-    if (catSeleccionada !== '' && provSeleccionado !== '') {
-        const nombreCatElegida = todasLasCategorias.find(c => Number(c.id_categoria) === Number(catSeleccionada))
-                                    ?.nombre_categoria.trim().toLowerCase();
-        proveedoresFiltrados = todosLosProveedores.filter(p => {
-            const nombreProv = p.nombre.trim().toLowerCase();
-            return Number(p.id_proveedor) === Number(provSeleccionado) || provsConVentas.has(nombreProv);
-        });
-    }
-
-    actualizarSelectoresOpciones(categoriasFiltradas, proveedoresFiltrados, catSeleccionada, provSeleccionado);
+    actualizarSelectoresOpciones(
+        data.categorias,
+        data.proveedores,
+        categoria,
+        proveedor
+    );
 }
 
 function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSel = '') {
@@ -191,9 +166,17 @@ function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSe
     }).join('');
     selectProv.innerHTML = htmlProvs;
 
-    $('#filtro-categoria, #filtro-proveedor').select2({ 
-        width: '100%', 
-        theme: 'bootstrap-5' 
+    if ($('#filtro-categoria').hasClass('select2-hidden-accessible')) {
+        $('#filtro-categoria').select2('destroy');
+    }
+
+    if ($('#filtro-proveedor').hasClass('select2-hidden-accessible')) {
+        $('#filtro-proveedor').select2('destroy');
+    }
+
+    $('#filtro-categoria, #filtro-proveedor').select2({
+        width: '100%',
+        theme: 'bootstrap-5'
     });
 }
 
@@ -253,6 +236,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filtro-desde').addEventListener('change', cargarReporte);
     document.getElementById('filtro-hasta').addEventListener('change', cargarReporte);
 
-    await cargarFiltros();
     await cargarReporte();
 });
