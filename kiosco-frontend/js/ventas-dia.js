@@ -133,29 +133,15 @@ function renderResumen(resumen) {
 }
 
 function actualizarFiltrosCruzados(productosTraidos, catSeleccionada, provSeleccionado) {
-    console.log("=== DEBUG FILTROS CRUZADOS ===");
-    console.log("1. Productos que vinieron de la API:", productosTraidos);
-    console.log("2. Filtros aplicados por el usuario -> Categoría ID:", catSeleccionada, "| Proveedor ID:", provSeleccionado);
-
     const catsDisponibles = new Set();
     const provsDisponibles = new Set();
 
     if (productosTraidos && productosTraidos.length > 0) {
-        productosTraidos.forEach((p, index) => {
-            const idCat = p.id_categoria || p.categoria_id;
-            const idProv = p.id_proveedor || p.proveedor_id;
-            
-            if (index === 0) {
-                console.log("3. Estructura del primer producto de la lista:", p);
-            }
-
-            if (idCat) catsDisponibles.add(Number(idCat));
-            if (idProv) provsDisponibles.add(Number(idProv));
+        productosTraidos.forEach(p => {
+            if (p.categoria) catsDisponibles.add(p.categoria.trim().toLowerCase());
+            if (p.proveedor) provsDisponibles.add(p.proveedor.trim().toLowerCase());
         });
     }
-
-    console.log("4. IDs de Categorías detectados con ventas:", Array.from(catsDisponibles));
-    console.log("5. IDs de Proveedores detectados con ventas:", Array.from(provsDisponibles));
 
     actualizarSelectoresOpciones(todasLasCategorias, todosLosProveedores, catSeleccionada, provSeleccionado, catsDisponibles, provsDisponibles);
 }
@@ -164,14 +150,12 @@ function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSe
     const selectCat = document.getElementById('filtro-categoria');
     const selectProv = document.getElementById('filtro-proveedor');
 
-    console.log("6. Catálogos maestros originales -> Categorías totales:", listaCats.length, "| Proveedores totales:", listaProvs.length);
-
     let htmlCats = '<option value="">Todas las categorías</option>';
     htmlCats += listaCats.map(c => {
         const id = Number(c.id_categoria);
         const selected = id === Number(catSel) ? 'selected' : '';
-        
-        const tieneVentas = provSel === '' || catsDisponibles.has(id) || id === Number(catSel);
+        const nombreBuscado = c.nombre_categoria.trim().toLowerCase();
+        const tieneVentas = provSel === '' || catsDisponibles.has(nombreBuscado) || id === Number(catSel);
         const label = tieneVentas ? c.nombre_categoria : `${c.nombre_categoria} (Sin ventas)`;
         const disabled = tieneVentas ? '' : 'disabled';
 
@@ -184,12 +168,9 @@ function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSe
         const id = Number(p.id_proveedor);
         const selected = id === Number(provSel) ? 'selected' : '';
         
-        const tieneVentas = catSel === '' || provsDisponibles.has(id) || id === Number(provSel);
+        const nombreBuscado = p.nombre.trim().toLowerCase();
+        const tieneVentas = catSel === '' || provsDisponibles.has(nombreBuscado) || id === Number(provSel);
         
-        if (p.nombre.toLowerCase().includes('coca') || p.nombre.toLowerCase().includes('manao')) {
-            console.log(`[Evalúo Proveedor: ${p.nombre}] ID Maestro: ${id} | ¿Tiene ventas según el Set?: ${provsDisponibles.has(id)} | Condición final tieneVentas: ${tieneVentas}`);
-        }
-
         const label = tieneVentas ? p.nombre : `${p.nombre} (Sin ventas)`;
         const disabled = tieneVentas ? '' : 'disabled';
 
@@ -201,7 +182,6 @@ function actualizarSelectoresOpciones(listaCats, listaProvs, catSel = '', provSe
         width: '100%', 
         theme: 'bootstrap-5' 
     });
-    console.log("=== FIN DEBUG ===");
 }
 
 document.getElementById('btn-limpiar').addEventListener('click', () => {
