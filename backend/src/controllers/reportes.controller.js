@@ -31,29 +31,31 @@ const reportesController = {
             }
 
             if (fechaInicio && fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora BETWEEN $1 AND $2`;
-                filtrosCantidad += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                filtrosProductos += ` AND (v.fecha_hora - INTERVAL '3 hours') BETWEEN $1 AND $2`;
+                filtrosCantidad += ` AND (v.fecha_hora - INTERVAL '3 hours') BETWEEN $1 AND $2`;
 
                 paramsProductos.push(fechaInicio, fechaFin);
                 paramsCantidad.push(fechaInicio, fechaFin);
 
             } else if (fechaInicio) {
-                filtrosProductos += ` AND v.fecha_hora >= $1`;
-                filtrosCantidad += ` AND v.fecha_hora >= $1`;
+                filtrosProductos += ` AND (v.fecha_hora - INTERVAL '3 hours') >= $1`;
+                filtrosCantidad += ` AND (v.fecha_hora - INTERVAL '3 hours') >= $1`;
 
                 paramsProductos.push(fechaInicio);
                 paramsCantidad.push(fechaInicio);
 
             } else if (fechaFin) {
-                filtrosProductos += ` AND v.fecha_hora <= $1`;
-                filtrosCantidad += ` AND v.fecha_hora <= $1`;
+                filtrosProductos += ` AND (v.fecha_hora - INTERVAL '3 hours') <= $1`;
+                filtrosCantidad += ` AND (v.fecha_hora - INTERVAL '3 hours') <= $1`;
 
                 paramsProductos.push(fechaFin);
                 paramsCantidad.push(fechaFin);
 
             } else {
-                filtrosProductos += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
-                filtrosCantidad += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosProductos += ` AND DATE(v.fecha_hora - INTERVAL '3 hours') =
+                                        DATE(NOW() - INTERVAL '3 hours')`;
+                filtrosCantidad += ` AND DATE(v.fecha_hora - INTERVAL '3 hours') =
+                                        DATE(NOW() - INTERVAL '3 hours')`;
             }
 
             if (categoria) {
@@ -115,15 +117,15 @@ const reportesController = {
             let paramsMediosPago = [];
 
             if (fechaInicio && fechaFin) {
-                filtrosMediosPago += ` AND v.fecha_hora BETWEEN $1 AND $2`;
+                filtrosMediosPago += ` AND (v.fecha_hora - INTERVAL '3 hours') BETWEEN $1 AND $2`;
                 paramsMediosPago.push(fechaInicio, fechaFin);
 
             } else if (fechaInicio) {
-                filtrosMediosPago += ` AND v.fecha_hora >= $1`;
+                filtrosMediosPago += ` AND (v.fecha_hora - INTERVAL '3 hours') >= $1`;
                 paramsMediosPago.push(fechaInicio);
 
             } else if (fechaFin) {
-                filtrosMediosPago += ` AND v.fecha_hora <= $1`;
+                filtrosMediosPago += ` AND (v.fecha_hora - INTERVAL '3 hours') <= $1`;
                 paramsMediosPago.push(fechaFin);
 
             } else {
