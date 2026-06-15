@@ -129,7 +129,10 @@ const reportesController = {
                 paramsMediosPago.push(fechaFin);
 
             } else {
-                filtrosMediosPago += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtrosMediosPago += `
+                    AND DATE(v.fecha_hora - INTERVAL '3 hours')
+                    = DATE(NOW() - INTERVAL '3 hours')
+                `;
             }
 
             const mediosPagoResult = await db.query(`
@@ -200,15 +203,20 @@ const reportesController = {
             }
 
             const result = await db.query(`
-                SELECT 
-                    COALESCE(dv.descripcion_manual, p.nombre) AS nombre,
-                    SUM(dv.cantidad) AS cantidad
-                FROM detalle_ventas dv
-                LEFT JOIN productos p ON dv.id_producto = p.id_producto
-                JOIN ventas v ON dv.id_venta = v.id_venta
-                AND COALESCE(v.estado, 'activa') = 'activa'
-                ${filtros}
-                GROUP BY COALESCE(dv.descripcion_manual, p.nombre)
+                SELECT
+                    nombre,
+                    SUM(cantidad) AS cantidad
+                FROM (
+                    SELECT
+                        LOWER(TRIM(COALESCE(dv.descripcion_manual, p.nombre))) AS nombre,
+                        dv.cantidad
+                    FROM detalle_ventas dv
+                    LEFT JOIN productos p ON dv.id_producto = p.id_producto
+                    JOIN ventas v ON dv.id_venta = v.id_venta
+                    AND COALESCE(v.estado, 'activa') = 'activa'
+                    ${filtros}
+                ) t
+                GROUP BY nombre
                 ORDER BY cantidad DESC
                 LIMIT 10
             `, params);
