@@ -182,19 +182,22 @@ const reportesController = {
             let params = [];
 
             if (desde && hasta) {
-                filtros += ` AND DATE(v.fecha_hora) BETWEEN $1 AND $2`;
+                filtros += ` AND DATE(v.fecha_hora - INTERVAL '3 hours') BETWEEN $1 AND $2`;
                 params.push(desde, hasta);
 
             } else if (desde) {
-                filtros += ` AND DATE(v.fecha_hora) >= $1`;
+                filtros += ` AND DATE(v.fecha_hora - INTERVAL '3 hours') >= $1`;
                 params.push(desde);
 
             } else if (hasta) {
-                filtros += ` AND DATE(v.fecha_hora) <= $1`;
+                filtros += ` AND DATE(v.fecha_hora - INTERVAL '3 hours') <= $1`;
                 params.push(hasta);
 
             } else {
-                filtros += ` AND DATE(v.fecha_hora) = CURRENT_DATE`;
+                filtros += `
+                    AND DATE(v.fecha_hora - INTERVAL '3 hours')
+                    = DATE(NOW() - INTERVAL '3 hours')
+                `;
             }
 
             if (categoria) {
