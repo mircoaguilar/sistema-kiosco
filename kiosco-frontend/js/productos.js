@@ -231,6 +231,7 @@ formProd.addEventListener('submit', async (e) => {
 window.prepararEdicion = async (id) => {
     const p = productos.find(x => Number(x.id_producto) === Number(id));
     if (!p) return;
+    document.getElementById('contenedor-modo-rapido').style.display = 'none';
     await cargarCategorias();
     editandoID = id;
     document.getElementById('modalTitulo').innerText = "Editar Producto";
@@ -304,6 +305,7 @@ window.eliminarCat = async (id) => {
 
 function limpiarFormulario() {
     editandoID = null;
+    document.getElementById('contenedor-modo-rapido').style.display = 'block';
     formProd.reset();
     document.getElementById('modalTitulo').innerText = "Nuevo Producto";
     document.getElementById('stock_minimo').value = "5";
@@ -342,6 +344,8 @@ document.getElementById('filtro-proveedor').addEventListener('change', aplicarFi
 document.getElementById('filtro-estado').addEventListener('change', cargarProductos);
 
 document.getElementById('btnNuevoProd').onclick = async () => {
+    document.getElementById('contenedor-modo-rapido').style.display = 'block';
+
     limpiarFormulario();
     await cargarCategorias();
     bootstrapModalProd.show();
