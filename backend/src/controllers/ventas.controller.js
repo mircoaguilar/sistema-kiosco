@@ -248,6 +248,9 @@ const ventasController = {
                 params
             );
 
+            console.log(result.rows[0].fecha_hora);
+            console.log(typeof result.rows[0].fecha_hora);
+
             res.json(result.rows);
 
         } catch (error) {
