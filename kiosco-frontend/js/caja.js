@@ -164,7 +164,7 @@ document.getElementById('formCerrarCaja').addEventListener('submit', async (e) =
 
             setTimeout(() => {
                 location.reload();
-            }, 4000);
+            }, 1000);
         } else {
             alert(data.error || "Error al cerrar");
         }
