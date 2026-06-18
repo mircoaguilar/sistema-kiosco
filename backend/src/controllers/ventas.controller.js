@@ -236,7 +236,10 @@ const ventasController = {
             const result = await db.query(
                 `SELECT 
                     v.id_venta,
-                    v.fecha_hora,
+                    TO_CHAR(
+                        v.fecha_hora,
+                        'YYYY-MM-DD HH24:MI:SS'
+                    ) AS fecha_hora,
                     u.nombre_completo AS vendedor,
                     v.metodo_pago,
                     v.total_final,
@@ -248,8 +251,7 @@ const ventasController = {
                 params
             );
 
-            console.log(result.rows[0].fecha_hora);
-            console.log(typeof result.rows[0].fecha_hora);
+            console.log(result.rows[0]);
 
             res.json(result.rows);
 
