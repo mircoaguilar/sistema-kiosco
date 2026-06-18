@@ -210,7 +210,7 @@ function renderDetalleModal(data) {
     contenido.innerHTML = `
         <div class="mb-3">
             <strong>Venta:</strong> #${venta.id_venta}<br>
-            <strong>Fecha:</strong> ${formatearFecha(venta.fecha_hora)}<br>
+            <strong>Fecha:</strong> ${venta.fecha_hora_local}<br>
             <strong>Vendedor:</strong> ${venta.vendedor}<br>
             <strong>Método:</strong> ${venta.metodo_pago}<br>
             <strong>Estado:</strong> ${venta.estado}
@@ -668,16 +668,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function formatearFecha(fecha) {
-    if (!fecha) return '';
-
-    return new Date(fecha).toLocaleString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    });
+    return fecha;
 }
