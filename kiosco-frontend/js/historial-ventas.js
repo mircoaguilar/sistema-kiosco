@@ -210,7 +210,7 @@ function renderDetalleModal(data) {
     contenido.innerHTML = `
         <div class="mb-3">
             <strong>Venta:</strong> #${venta.id_venta}<br>
-            <strong>Fecha:</strong> ${formatearFecha(venta.fecha_hora)}<br>
+            <strong>Fecha:</strong> ${venta.fecha_hora_local}<br>
             <strong>Vendedor:</strong> ${venta.vendedor}<br>
             <strong>Método:</strong> ${venta.metodo_pago}<br>
             <strong>Estado:</strong> ${venta.estado}

@@ -208,23 +208,54 @@ const ventasController = {
             let params = [];
             let idx = 1;
 
+            const fechaLocal = `
+            (
+                (v.fecha_hora AT TIME ZONE 'UTC')
+                AT TIME ZONE 'America/Argentina/Buenos_Aires'
+            )
+            `;
+
             if (desde) {
-                filtros += ` AND DATE(v.fecha_hora) >= $${idx++}`;
+                filtros += `
+                    AND DATE(
+                        (v.fecha_hora AT TIME ZONE 'UTC')
+                        AT TIME ZONE 'America/Argentina/Buenos_Aires'
+                    ) >= $${idx++}
+                `;
                 params.push(desde);
             }
 
             if (hasta) {
-                filtros += ` AND DATE(v.fecha_hora) <= $${idx++}`;
+                filtros += `
+                    AND DATE(
+                        (v.fecha_hora AT TIME ZONE 'UTC')
+                        AT TIME ZONE 'America/Argentina/Buenos_Aires'
+                    ) <= $${idx++}
+                `;
                 params.push(hasta);
             }
 
             if (hora_desde) {
-                filtros += ` AND CAST(v.fecha_hora AS time) >= $${idx++}`;
+                filtros += `
+                    AND CAST(
+                        (
+                            (v.fecha_hora AT TIME ZONE 'UTC')
+                            AT TIME ZONE 'America/Argentina/Buenos_Aires'
+                        ) AS time
+                    ) >= $${idx++}
+                `;
                 params.push(hora_desde);
             }
 
             if (hora_hasta) {
-                filtros += ` AND CAST(v.fecha_hora AS time) <= $${idx++}`;
+                filtros += `
+                    AND CAST(
+                        (
+                            (v.fecha_hora AT TIME ZONE 'UTC')
+                            AT TIME ZONE 'America/Argentina/Buenos_Aires'
+                        ) AS time
+                    ) <= $${idx++}
+                `;
                 params.push(hora_hasta);
             }
 
@@ -269,8 +300,13 @@ const ventasController = {
 
         try {
             const ventasResult = await db.query(
-                `SELECT 
+                `SELECT
                     v.*,
+                    TO_CHAR(
+                        (v.fecha_hora AT TIME ZONE 'UTC')
+                        AT TIME ZONE 'America/Argentina/Buenos_Aires',
+                        'YYYY-MM-DD HH24:MI:SS'
+                    ) AS fecha_hora_local,
                     u.nombre_completo AS vendedor
                 FROM ventas v
                 JOIN usuarios u ON v.id_usuario = u.id_usuario
