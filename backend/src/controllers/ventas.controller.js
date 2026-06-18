@@ -237,7 +237,8 @@ const ventasController = {
                 `SELECT 
                     v.id_venta,
                     TO_CHAR(
-                        v.fecha_hora,
+                        (v.fecha_hora AT TIME ZONE 'UTC')
+                        AT TIME ZONE 'America/Argentina/Buenos_Aires',
                         'YYYY-MM-DD HH24:MI:SS'
                     ) AS fecha_hora,
                     u.nombre_completo AS vendedor,
