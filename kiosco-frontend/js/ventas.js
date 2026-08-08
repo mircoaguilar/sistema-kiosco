@@ -279,15 +279,17 @@ async function procesarVenta(metodo) {
             body: JSON.stringify(venta)
         });
 
-        if (!res.ok) throw new Error();
+        const data = await res.json().catch(() => ({}));
 
-        const respuestaData = await res.json().catch(() => ({}));
-        
+        if (!res.ok) {
+            throw new Error(data.details || data.error || "Error al procesar la venta");
+        }
+
         ultimaVentaRegistrada = {
-            id_venta: respuestaData.id_venta || "NUEVA",
+            id_venta: data.id_venta || "NUEVA",
             total_venta: totalVenta,
             monto_pagado: montoPagado,
-            items: [...carrito] 
+            items: [...carrito]
         };
 
         if (imprimirTicket) {
@@ -303,7 +305,7 @@ async function procesarVenta(metodo) {
 
     } catch (e) { 
         console.error(e);
-        mostrarToast("Error al procesar la venta", "error"); 
+        mostrarToast(e.message || "Error al procesar la venta", "error"); 
     }
 }
 

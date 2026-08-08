@@ -14,7 +14,7 @@ const verificarCajaAbierta = async (req, res, next) => {
 
         if (result.rows.length === 0) {
             return res.status(403).json({
-                error: "Acceso denegado. No hay una sesión de caja abierta para este usuario."
+                error: "Debes abrir una caja antes de registrar una venta."
             });
         }
 

@@ -243,7 +243,7 @@ window.prepararEdicion = async (id) => {
     document.getElementById('precio_venta').value = p.precio_venta;
     document.getElementById('stock').value = p.stock;
     document.getElementById('stock_minimo').value = p.stock_minimo;
-    document.getElementById('es_pesable').checked = (p.es_pesable === 1);
+    document.getElementById('es_pesable').checked = (Number(p.es_pesable) === 1);
     document.getElementById('fecha_vencimiento').value = p.fecha_vencimiento || '';
     
     bootstrapModalProd.show();
